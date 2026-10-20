@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>台股資金流向｜2026-10-20</title>
+<style>
+:root{
+  color-scheme:light;
+  --page:#f4f5f7;--surface:#fcfcfb;--surface2:#f0f1ee;--ink:#0b0b0b;--ink2:#52514e;--muted:#6f6d68;
+  --grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,.10);--accent:#2a78d6;--accent-soft:#dbe8f9;
+  --up:#c0392b;--down:#2aa198;--neutral:#e4e3de;--up-text:#a8322a;--down-text:#1b7b73;--cool:#9a9891;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --page:#0b1320;--surface:#121c2b;--surface2:#182437;--ink:#eef2f8;--ink2:#b7c3d3;--muted:#8d9aac;
+    --grid:#223047;--axis:#33445c;--border:rgba(255,255,255,.10);--accent:#3987e5;--accent-soft:#1d3352;
+    --up:#e05a5e;--down:#17a39b;--neutral:#3a4556;--up-text:#f08386;--down-text:#4cc8bd;--cool:#6b7789;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page:#0b1320;--surface:#121c2b;--surface2:#182437;--ink:#eef2f8;--ink2:#b7c3d3;--muted:#8d9aac;
+  --grid:#223047;--axis:#33445c;--border:rgba(255,255,255,.10);--accent:#3987e5;--accent-soft:#1d3352;
+  --up:#e05a5e;--down:#17a39b;--neutral:#3a4556;--up-text:#f08386;--down-text:#4cc8bd;--cool:#6b7789;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:14px/1.6 system-ui,-apple-system,"Segoe UI","Noto Sans TC","Microsoft JhengHei",sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 16px 56px}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:1px solid var(--grid);padding-bottom:18px}
+.overline{font-size:11px;letter-spacing:2px;color:var(--accent);font-weight:700}
+h1{font-size:26px;margin:4px 0 2px;line-height:1.3}
+.sub{margin:0;color:var(--ink2);font-size:13px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.status{font-size:12px;color:var(--ink2);text-align:right}
+select,button,input{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px}
+button{cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);font-weight:700}
+button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.notice{font-size:12.5px;color:var(--ink2);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:16px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.kpi .cap{font-size:12px;color:var(--ink2)}
+.kpi .val{font-size:26px;font-weight:650;margin:2px 0;line-height:1.25}
+.kpi small{display:block;font-size:12px;color:var(--ink2)}
+.nowrap{white-space:nowrap}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 18px 16px;margin-bottom:16px}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px}
+h2{font-size:17px;margin:0}
+h3{font-size:15px;margin:18px 0 0}
+table.narrow{min-width:420px;max-width:640px}
+.detail{font-size:12.5px;color:var(--ink2);margin:6px 0 12px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.up{color:var(--up-text)}.down{color:var(--down-text)}.flat{color:var(--ink2)}
+.treemap{position:relative;width:100%;height:520px}
+.treemap svg,.bars svg{display:block;width:100%}
+.scale{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);margin-top:10px;flex-wrap:wrap}
+.scale .bar{width:180px;height:10px;border-radius:5px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:720px}
+th{font-weight:600;color:var(--ink2);text-align:right;padding:9px 10px;border-bottom:1px solid var(--axis);white-space:nowrap;background:var(--surface)}
+td{padding:9px 10px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+td small{display:block;color:var(--muted);font-size:11.5px}
+tbody tr:hover{background:var(--surface2)}
+.name{font-weight:650}
+ul.summary{margin:8px 0 0;padding-left:20px}
+ul.summary li{margin:4px 0}
+.gap{color:var(--ink2);font-size:13px;margin:6px 0 0}
+footer{font-size:12px;color:var(--ink2);border-top:1px solid var(--grid);padding-top:14px;line-height:1.8}
+footer b{color:var(--ink)}
+.tip{position:fixed;z-index:10;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12.5px;box-shadow:0 6px 24px rgba(0,0,0,.18);max-width:260px}
+.tip b{font-size:14px}
+.tip .k{color:var(--ink2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.private-banner{font-size:13px;font-weight:600;background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:10px 14px;margin:0 0 16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{border:1px solid var(--border);border-radius:12px;padding:14px;background:var(--surface2)}
+.card-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.card-name{font-size:16px;font-weight:700}
+.card-name small{font-size:12px;font-weight:400;color:var(--muted);margin-left:6px}
+.card-price{font-size:13px;text-align:right;white-space:nowrap}
+.card-meta{font-size:12px;color:var(--ink2);margin:4px 0 8px}
+.badge{display:inline-block;font-size:11.5px;font-weight:700;border:1px solid var(--accent);color:var(--ink);border-radius:6px;padding:1px 6px;margin-right:6px}
+.card h4{font-size:12px;color:var(--ink2);margin:10px 0 4px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;border:1px solid var(--border);border-radius:999px;padding:2px 9px;background:var(--surface)}
+.chip.risk::before{content:"⚠ "}
+.chip.miss{color:var(--muted)}
+.cond{font-size:12.5px;margin:0;padding-left:0;list-style:none}
+.cond li{margin:3px 0}
+.cond b{color:var(--ink2);font-weight:600}
+@media (max-width:640px){h1{font-size:21px}.treemap{height:380px}.kpi{padding:12px}.kpi .val{font-size:20px}.status{text-align:left}.panel{padding:14px 12px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div>
+      <div class="overline">TW EQUITY · CAPITAL FLOW</div>
+      <h1>台股全市場資金流向</h1>
+      <p class="sub">上市＋上櫃普通股｜產業成交熱度、漲跌與輪動</p>
+    </div>
+    <div>
+      <div class="controls">
+        <label class="sr" for="dateSel">資料日期</label>
+        <select id="dateSel"></select>
+        <button id="themeBtn" type="button">切換深淺色</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+  </header>
+
+  <p class="notice">成交值 ≠ 法人淨買超 ≠ 資金淨流入。顏色照台股習慣：紅＝上漲、綠＝下跌；數字都附 ▲▼ 與正負號。</p>
+
+  <section class="kpis" id="kpis" aria-label="大盤摘要"></section>
+
+  <p class="private-banner" id="privateBanner" hidden>這是只在你電腦上的「自己看」版本，含個股研究候選。請不要上傳或轉傳；要給朋友看的請用公開網站。</p>
+
+  <section class="panel">
+    <h2>今日重點</h2>
+    <ul class="summary" id="summary"></ul>
+  </section>
+
+  <section class="panel" id="candidatePanel" hidden>
+    <h2>系統研究候選</h2>
+    <p class="detail" id="candidateNote"></p>
+    <div class="cards" id="candidates"></div>
+  </section>
+
+  <section class="panel">
+    <div class="head">
+      <h2>產業成交熱力圖</h2>
+      <div class="tabs" role="group" aria-label="產業範圍" id="mapTabs">
+        <button type="button" data-group="all" aria-pressed="true">全部產業</button>
+        <button type="button" data-group="electronic" aria-pressed="false">電子</button>
+        <button type="button" data-group="other" aria-pressed="false">非電子</button>
+      </div>
+    </div>
+    <p class="detail">格子大小＝產業成交值占普通股總成交的比例；顏色＝當日市值加權漲跌。成交占比四捨五入為 0 的產業只列在下方明細表。</p>
+    <div class="treemap" id="treemap"></div>
+    <div class="scale" id="mapScale"></div>
+  </section>
+
+  <section class="panel">
+    <div class="head">
+      <h2>產業輪動</h2>
+      <div class="tabs" role="group" aria-label="比較項目" id="barTabs">
+        <button type="button" data-measure="return_1d_pct" aria-pressed="true">今日漲跌</button>
+        <button type="button" data-measure="return_5d_pct" aria-pressed="false">近 5 日</button>
+        <button type="button" data-measure="return_20d_pct" aria-pressed="false">近 20 日</button>
+        <button type="button" data-measure="turnover_share_deviation_pp" aria-pressed="false">比平常熱</button>
+        <button type="button" data-measure="institution_value_100m" aria-pressed="false">法人買賣超</button>
+      </div>
+    </div>
+    <p class="detail" id="barNote"></p>
+    <div class="bars" id="bars"></div>
+  </section>
+
+  <section class="panel">
+    <h2>個股成交值前 10 名</h2>
+    <p class="detail">上市＋上櫃普通股，依當日成交值排序（一般交易，不含盤後定價、零股、鉅額）。這是成交排行，不是推薦名單。</p>
+    <div class="scroll"><table id="top10"></table></div>
+  </section>
+
+  <section class="panel">
+    <div class="head">
+      <h2>產業明細</h2>
+      <div class="tabs" role="group" aria-label="排序" id="sortTabs">
+        <button type="button" data-sort="turnover_share_pct" aria-pressed="true">依成交占比</button>
+        <button type="button" data-sort="turnover_share_deviation_pp" aria-pressed="false">依比平常熱</button>
+        <button type="button" data-sort="return_1d_pct" aria-pressed="false">依今日漲跌</button>
+        <button type="button" data-sort="institution_value_100m" aria-pressed="false">依法人估算</button>
+        <label class="sr" for="search">搜尋產業</label>
+        <input id="search" type="search" placeholder="搜尋產業">
+      </div>
+    </div>
+    <p class="detail">「比平常熱」＝今日成交占比減去前 20 個交易日的平均占比（百分點）。5／20 日漲跌是收盤價比較、市值加權、未還原除權息，不是成交額變化。</p>
+    <div class="scroll"><table id="industries"></table></div>
+  </section>
+
+  <section class="panel">
+    <h2>三大法人</h2>
+    <p class="detail">上市市場整體金額來自證交所「三大法人買賣金額統計表」（官方金額，不含上櫃）。外資含外資自營商；自營商含自行買賣與避險。</p>
+    <div class="scroll"><table id="listedInst" class="narrow"></table></div>
+    <h3>成交值前 10 名：法人買賣超（估算）</h3>
+    <p class="detail">三大法人合計淨股數 × 當日收盤價，單位：億元。這是估算，不是法人實際成交金額；紅＝買超、綠＝賣超。</p>
+    <div class="bars" id="instBars"></div>
+    <p class="gap" id="gapNote"></p>
+  </section>
+
+  <footer id="footer"></footer>
+</main>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<script type="application/json" id="payload">{"archive": ["2026-10-20", "2026-10-19"], "breadth": {"down": 1152, "flat": 212, "up": 585}, "company_list_date": "2026-10-18", "date": "2026-10-20", "fetch_missing": {}, "gaps": [], "generated_at": "2026-10-20T19:11+08:00", "industries": [{"down": 119, "flat": 22, "group": "electronic", "institution_value_100m": -199.74, "institution_value_5d_100m": -675.45, "marketcap_share_pct": 10.7, "n_stocks": 210, "name": "電子零組件", "return_1d_pct": -2.21, "return_20d_pct": 4.92, "return_5d_pct": -6.91, "turnover_100m": 3018.7, "turnover_share_avg20_pct": 25.5, "turnover_share_deviation_pp": 7.07, "turnover_share_pct": 32.57, "up": 69}, {"down": 141, "flat": 15, "group": "electronic", "institution_value_100m": -450.61, "institution_value_5d_100m": -3466.46, "marketcap_share_pct": 54.23, "n_stocks": 207, "name": "半導體業", "return_1d_pct": -1.02, "return_20d_pct": -1.94, "return_5d_pct": -5.11, "turnover_100m": 2799.3, "turnover_share_avg20_pct": 39.19, "turnover_share_deviation_pp": -9.0, "turnover_share_pct": 30.2, "up": 51}, {"down": 62, "flat": 12, "group": "electronic", "institution_value_100m": -53.43, "institution_value_5d_100m": -65.75, "marketcap_share_pct": 1.74, "n_stocks": 116, "name": "光電業", "return_1d_pct": -1.52, "return_20d_pct": 4.52, "return_5d_pct": -6.71, "turnover_100m": 749.1, "turnover_share_avg20_pct": 7.76, "turnover_share_deviation_pp": 0.33, "turnover_share_pct": 8.08, "up": 42}, {"down": 41, "flat": 10, "group": "electronic", "institution_value_100m": 156.22, "institution_value_5d_100m": 5.27, "marketcap_share_pct": 5.39, "n_stocks": 108, "name": "電腦及週邊設備", "return_1d_pct": 1.24, "return_20d_pct": -1.63, "return_5d_pct": -2.14, "turnover_100m": 621.1, "turnover_share_avg20_pct": 5.45, "turnover_share_deviation_pp": 1.25, "turnover_share_pct": 6.7, "up": 57}, {"down": 22, "flat": 2, "group": "other", "institution_value_100m": -26.13, "institution_value_5d_100m": -147.79, "marketcap_share_pct": 2.11, "n_stocks": 25, "name": "塑膠工業", "return_1d_pct": -2.65, "return_20d_pct": 20.05, "return_5d_pct": -6.86, "turnover_100m": 396.2, "turnover_share_avg20_pct": 3.14, "turnover_share_deviation_pp": 1.14, "turnover_share_pct": 4.27, "up": 1}, {"down": 60, "flat": 8, "group": "electronic", "institution_value_100m": -20.92, "institution_value_5d_100m": -138.53, "marketcap_share_pct": 4.03, "n_stocks": 92, "name": "其他電子業", "return_1d_pct": -0.11, "return_20d_pct": -2.31, "return_5d_pct": -3.37, "turnover_100m": 356.6, "turnover_share_avg20_pct": 4.63, "turnover_share_deviation_pp": -0.78, "turnover_share_pct": 3.85, "up": 24}, {"down": 49, "flat": 8, "group": "electronic", "institution_value_100m": 0.81, "institution_value_5d_100m": 105.28, "marketcap_share_pct": 2.82, "n_stocks": 90, "name": "通信網路業", "return_1d_pct": -0.93, "return_20d_pct": 3.24, "return_5d_pct": -0.63, "turnover_100m": 339.5, "turnover_share_avg20_pct": 4.34, "turnover_share_deviation_pp": -0.68, "turnover_share_pct": 3.66, "up": 33}, {"down": 39, "flat": 0, "group": "other", "institution_value_100m": -46.18, "institution_value_5d_100m": 154.07, "marketcap_share_pct": 8.3, "n_stocks": 40, "name": "金融保險", "return_1d_pct": -2.36, "return_20d_pct": -0.71, "return_5d_pct": -1.38, "turnover_100m": 196.3, "turnover_share_avg20_pct": 1.93, "turnover_share_deviation_pp": 0.19, "turnover_share_pct": 2.12, "up": 1}, {"down": 54, "flat": 9, "group": "other", "institution_value_100m": 0.64, "institution_value_5d_100m": -16.02, "marketcap_share_pct": 1.17, "n_stocks": 98, "name": "電機機械", "return_1d_pct": -1.32, "return_20d_pct": -2.36, "return_5d_pct": -4.07, "turnover_100m": 153.7, "turnover_share_avg20_pct": 1.79, "turnover_share_deviation_pp": -0.13, "turnover_share_pct": 1.66, "up": 35}, {"down": 2, "flat": 1, "group": "other", "institution_value_100m": 13.71, "institution_value_5d_100m": 28.76, "marketcap_share_pct": 0.13, "n_stocks": 5, "name": "玻璃陶瓷", "return_1d_pct": 2.18, "return_20d_pct": 14.36, "return_5d_pct": 8.52, "turnover_100m": 147.6, "turnover_share_avg20_pct": 0.39, "turnover_share_deviation_pp": 1.2, "turnover_share_pct": 1.59, "up": 2}, {"down": 27, "flat": 4, "group": "other", "institution_value_100m": -0.22, "institution_value_5d_100m": 76.31, "marketcap_share_pct": 1.33, "n_stocks": 34, "name": "航運業", "return_1d_pct": -0.99, "return_20d_pct": 0.62, "return_5d_pct": -2.25, "turnover_100m": 67.0, "turnover_share_avg20_pct": 0.87, "turnover_share_deviation_pp": -0.15, "turnover_share_pct": 0.72, "up": 3}, {"down": 24, "flat": 3, "group": "other", "institution_value_100m": -1.03, "institution_value_5d_100m": 2.29, "marketcap_share_pct": 0.4, "n_stocks": 42, "name": "化學工業", "return_1d_pct": -0.04, "return_20d_pct": 4.04, "return_5d_pct": -2.87, "turnover_100m": 60.6, "turnover_share_avg20_pct": 0.8, "turnover_share_deviation_pp": -0.15, "turnover_share_pct": 0.65, "up": 15}, {"down": 9, "flat": 0, "group": "other", "institution_value_100m": -0.09, "institution_value_5d_100m": -2.19, "marketcap_share_pct": 0.71, "n_stocks": 12, "name": "油電燃氣", "return_1d_pct": -7.34, "return_20d_pct": 20.26, "return_5d_pct": -9.65, "turnover_100m": 59.7, "turnover_share_avg20_pct": 0.4, "turnover_share_deviation_pp": 0.25, "turnover_share_pct": 0.64, "up": 3}, {"down": 45, "flat": 15, "group": "other", "institution_value_100m": -2.19, "institution_value_5d_100m": 14.55, "marketcap_share_pct": 0.6, "n_stocks": 92, "name": "其他", "return_1d_pct": -0.53, "return_20d_pct": -0.93, "return_5d_pct": -0.53, "turnover_100m": 44.0, "turnover_share_avg20_pct": 0.49, "turnover_share_deviation_pp": -0.01, "turnover_share_pct": 0.47, "up": 32}, {"down": 87, "flat": 23, "group": "other", "institution_value_100m": -1.08, "institution_value_5d_100m": 18.35, "marketcap_share_pct": 1.03, "n_stocks": 155, "name": "生技醫療", "return_1d_pct": -0.69, "return_20d_pct": -4.43, "return_5d_pct": -1.65, "turnover_100m": 42.2, "turnover_share_avg20_pct": 0.69, "turnover_share_deviation_pp": -0.24, "turnover_share_pct": 0.46, "up": 45}, {"down": 20, "flat": 7, "group": "electronic", "institution_value_100m": -0.58, "institution_value_5d_100m": 6.48, "marketcap_share_pct": 0.64, "n_stocks": 38, "name": "電子通路業", "return_1d_pct": -0.62, "return_20d_pct": 2.7, "return_5d_pct": -2.9, "turnover_100m": 36.3, "turnover_share_avg20_pct": 0.54, "turnover_share_deviation_pp": -0.14, "turnover_share_pct": 0.39, "up": 11}, {"down": 22, "flat": 10, "group": "other", "institution_value_100m": 4.94, "institution_value_5d_100m": 51.1, "marketcap_share_pct": 0.56, "n_stocks": 48, "name": "鋼鐵工業", "return_1d_pct": -0.48, "return_20d_pct": 5.3, "return_5d_pct": 1.79, "turnover_100m": 30.5, "turnover_share_avg20_pct": 0.25, "turnover_share_deviation_pp": 0.08, "turnover_share_pct": 0.33, "up": 16}, {"down": 30, "flat": 5, "group": "other", "institution_value_100m": 0.25, "institution_value_5d_100m": 7.92, "marketcap_share_pct": 0.45, "n_stocks": 44, "name": "汽車工業", "return_1d_pct": -1.04, "return_20d_pct": -0.63, "return_5d_pct": -0.92, "turnover_100m": 16.4, "turnover_share_avg20_pct": 0.19, "turnover_share_deviation_pp": -0.02, "turnover_share_pct": 0.18, "up": 9}, {"down": 29, "flat": 0, "group": "other", "institution_value_100m": -1.05, "institution_value_5d_100m": 1.7, "marketcap_share_pct": 0.27, "n_stocks": 44, "name": "綠能環保", "return_1d_pct": -0.68, "return_20d_pct": -3.58, "return_5d_pct": -3.38, "turnover_100m": 15.4, "turnover_share_avg20_pct": 0.23, "turnover_share_deviation_pp": -0.07, "turnover_share_pct": 0.17, "up": 15}, {"down": 16, "flat": 6, "group": "electronic", "institution_value_100m": 1.88, "institution_value_5d_100m": 6.09, "marketcap_share_pct": 0.15, "n_stocks": 44, "name": "資訊服務業", "return_1d_pct": 0.26, "return_20d_pct": 3.65, "return_5d_pct": -0.57, "turnover_100m": 13.3, "turnover_share_avg20_pct": 0.19, "turnover_share_deviation_pp": -0.04, "turnover_share_pct": 0.14, "up": 22}, {"down": 12, "flat": 4, "group": "other", "institution_value_100m": 3.4, "institution_value_5d_100m": 29.03, "marketcap_share_pct": 0.18, "n_stocks": 23, "name": "文化創意業", "return_1d_pct": 0.85, "return_20d_pct": 5.6, "return_5d_pct": -1.51, "turnover_100m": 13.2, "turnover_share_avg20_pct": 0.18, "turnover_share_deviation_pp": -0.04, "turnover_share_pct": 0.14, "up": 7}, {"down": 6, "flat": 0, "group": "other", "institution_value_100m": 1.34, "institution_value_5d_100m": 13.64, "marketcap_share_pct": 0.24, "n_stocks": 7, "name": "水泥工業", "return_1d_pct": -0.64, "return_20d_pct": 7.35, "return_5d_pct": 1.85, "turnover_100m": 12.0, "turnover_share_avg20_pct": 0.14, "turnover_share_deviation_pp": -0.01, "turnover_share_pct": 0.13, "up": 1}, {"down": 24, "flat": 7, "group": "other", "institution_value_100m": -0.75, "institution_value_5d_100m": 45.87, "marketcap_share_pct": 0.5, "n_stocks": 34, "name": "食品工業", "return_1d_pct": -1.25, "return_20d_pct": 1.12, "return_5d_pct": 0.44, "turnover_100m": 12.0, "turnover_share_avg20_pct": 0.11, "turnover_share_deviation_pp": 0.02, "turnover_share_pct": 0.13, "up": 3}, {"down": 50, "flat": 14, "group": "other", "institution_value_100m": 1.6, "institution_value_5d_100m": 9.97, "marketcap_share_pct": 0.58, "n_stocks": 86, "name": "建材營造", "return_1d_pct": -0.74, "return_20d_pct": -3.17, "return_5d_pct": -0.79, "turnover_100m": 11.4, "turnover_share_avg20_pct": 0.14, "turnover_share_deviation_pp": -0.02, "turnover_share_pct": 0.12, "up": 22}, {"down": 32, "flat": 7, "group": "other", "institution_value_100m": 0.32, "institution_value_5d_100m": 26.27, "marketcap_share_pct": 0.32, "n_stocks": 52, "name": "紡織纖維", "return_1d_pct": -0.44, "return_20d_pct": 3.8, "return_5d_pct": 0.04, "turnover_100m": 11.6, "turnover_share_avg20_pct": 0.14, "turnover_share_deviation_pp": -0.02, "turnover_share_pct": 0.12, "up": 13}, {"down": 19, "flat": 3, "group": "other", "institution_value_100m": 1.14, "institution_value_5d_100m": 2.89, "marketcap_share_pct": 0.17, "n_stocks": 39, "name": "數位雲端", "return_1d_pct": 0.3, "return_20d_pct": -1.0, "return_5d_pct": -0.65, "turnover_100m": 10.6, "turnover_share_avg20_pct": 0.08, "turnover_share_deviation_pp": 0.03, "turnover_share_pct": 0.11, "up": 17}, {"down": 18, "flat": 3, "group": "other", "institution_value_100m": 1.5, "institution_value_5d_100m": 16.93, "marketcap_share_pct": 0.27, "n_stocks": 27, "name": "運動休閒", "return_1d_pct": -0.34, "return_20d_pct": -0.1, "return_5d_pct": 0.68, "turnover_100m": 9.2, "turnover_share_avg20_pct": 0.08, "turnover_share_deviation_pp": 0.02, "turnover_share_pct": 0.1, "up": 6}, {"down": 13, "flat": 2, "group": "other", "institution_value_100m": -1.21, "institution_value_5d_100m": 0.86, "marketcap_share_pct": 0.19, "n_stocks": 17, "name": "電器電纜", "return_1d_pct": -1.22, "return_20d_pct": -0.7, "return_5d_pct": -3.86, "turnover_100m": 8.4, "turnover_share_avg20_pct": 0.15, "turnover_share_deviation_pp": -0.06, "turnover_share_pct": 0.09, "up": 2}, {"down": 11, "flat": 3, "group": "other", "institution_value_100m": 0.87, "institution_value_5d_100m": 39.92, "marketcap_share_pct": 0.24, "n_stocks": 18, "name": "貿易百貨", "return_1d_pct": -0.95, "return_20d_pct": 2.12, "return_5d_pct": 2.9, "turnover_100m": 5.5, "turnover_share_avg20_pct": 0.06, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.06, "up": 4}, {"down": 18, "flat": 1, "group": "other", "institution_value_100m": 0.4, "institution_value_5d_100m": 6.43, "marketcap_share_pct": 0.19, "n_stocks": 32, "name": "居家生活", "return_1d_pct": -0.39, "return_20d_pct": -1.33, "return_5d_pct": -1.39, "turnover_100m": 4.8, "turnover_share_avg20_pct": 0.06, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.05, "up": 13}, {"down": 8, "flat": 1, "group": "other", "institution_value_100m": 0.31, "institution_value_5d_100m": 10.6, "marketcap_share_pct": 0.14, "n_stocks": 11, "name": "橡膠工業", "return_1d_pct": -0.55, "return_20d_pct": 3.15, "return_5d_pct": 1.82, "turnover_100m": 3.6, "turnover_share_avg20_pct": 0.04, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.04, "up": 2}, {"down": 35, "flat": 5, "group": "other", "institution_value_100m": 0.07, "institution_value_5d_100m": 4.85, "marketcap_share_pct": 0.13, "n_stocks": 48, "name": "觀光餐旅", "return_1d_pct": -0.4, "return_20d_pct": 0.63, "return_5d_pct": -0.06, "turnover_100m": 2.4, "turnover_share_avg20_pct": 0.02, "turnover_share_deviation_pp": 0.0, "turnover_share_pct": 0.03, "up": 8}, {"down": 5, "flat": 1, "group": "other", "institution_value_100m": -0.3, "institution_value_5d_100m": 0.91, "marketcap_share_pct": 0.08, "n_stocks": 7, "name": "造紙工業", "return_1d_pct": -1.63, "return_20d_pct": -2.92, "return_5d_pct": -1.15, "turnover_100m": 1.2, "turnover_share_avg20_pct": 0.01, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.01, "up": 1}, {"down": 3, "flat": 1, "group": "other", "institution_value_100m": -0.0, "institution_value_5d_100m": 0.01, "marketcap_share_pct": 0.0, "n_stocks": 4, "name": "農業科技", "return_1d_pct": -0.34, "return_20d_pct": 0.22, "return_5d_pct": -2.0, "turnover_100m": 0.0, "turnover_share_avg20_pct": 0.0, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.0, "up": 0}], "institution_days": 21, "listed_institutions_100m": {"1d": {"dealer": -355.8, "foreign": -795.4, "total": -968.04, "trust": 183.15}, "20d": {"dealer": -2391.05, "foreign": -6161.92, "total": -7303.75, "trust": 1249.22}, "5d": {"dealer": -2125.5, "foreign": -5250.22, "total": -6398.49, "trust": 977.24}}, "notes": [], "ordinary_turnover_100m": 9270.0, "ordinary_turnover_by_market_100m": {"上市": 7202.0, "上櫃": 2067.0}, "stock_count": 1949, "summary": ["上市三大法人合計 −968.04 億（外資 −795.40、投信 +183.15、自營商 −355.80）；近 5 日合計 −6,398 億。", "成交最集中：電子零組件 32.6%＋半導體業 30.2%，合計 62.8%。", "比近 20 日平常更熱：電子零組件（+7.1 個百分點）、電腦及週邊設備（+1.2 個百分點）；更冷：半導體業（−9.0 個百分點）、其他電子業（−0.8 個百分點）。", "今日最強：玻璃陶瓷 +2.2%；最弱：油電燃氣 −7.3%（只比成交占比 0.5% 以上的產業）。", "近 5 日最強：玻璃陶瓷 +8.5%；最弱：油電燃氣 −9.7%（只比成交占比 0.5% 以上的產業）。", "近 20 日最強：油電燃氣 +20.3%；最弱：電機機械 −2.4%（只比成交占比 0.5% 以上的產業）。", "法人估算買超最多：電腦及週邊設備 +156.2 億；賣超最多：半導體業 −450.6 億（上市櫃合計，淨股數×收盤價估算）。", "普通股上漲 585 檔、下跌 1152 檔、平盤或未成交 212 檔。"], "taiex": {"change_pct": -1.13, "change_points": -529.15, "close": 46292.93}, "top10": [{"change_pct": -0.62, "close": 2405.0, "dealer_lots": -29, "foreign_lots": -9365, "industry": "半導體業", "institution_20d_lots": -87680, "institution_5d_lots": -64215, "institution_lots": -8356, "institution_value_100m": -200.96, "market": "上市", "name": "台積電", "rank": 1, "symbol": "2330", "trust_lots": 1038, "turnover_100m": 538.6}, {"change_pct": -2.47, "close": 296.0, "dealer_lots": 2556, "foreign_lots": -5125, "industry": "塑膠工業", "institution_20d_lots": -4287, "institution_5d_lots": -40908, "institution_lots": -4159, "institution_value_100m": -12.31, "market": "上市", "name": "南亞", "rank": 2, "symbol": "1303", "trust_lots": -1591, "turnover_100m": 320.0}, {"change_pct": 0.0, "close": 154.0, "dealer_lots": -665, "foreign_lots": -3019, "industry": "電子零組件", "institution_20d_lots": 35589, "institution_5d_lots": 35613, "institution_lots": -3635, "institution_value_100m": -5.6, "market": "上櫃", "name": "富喬", "rank": 3, "symbol": "1815", "trust_lots": 49, "turnover_100m": 296.3}, {"change_pct": -1.31, "close": 4150.0, "dealer_lots": -98, "foreign_lots": -1566, "industry": "半導體業", "institution_20d_lots": -25045, "institution_5d_lots": -13340, "institution_lots": -1367, "institution_value_100m": -56.72, "market": "上市", "name": "聯發科", "rank": 4, "symbol": "2454", "trust_lots": 297, "turnover_100m": 278.9}, {"change_pct": -2.06, "close": 523.0, "dealer_lots": -456, "foreign_lots": -7170, "industry": "電子零組件", "institution_20d_lots": -39601, "institution_5d_lots": -36075, "institution_lots": -7933, "institution_value_100m": -41.49, "market": "上市", "name": "國巨*", "rank": 5, "symbol": "2327", "trust_lots": -307, "turnover_100m": 230.4}, {"change_pct": -1.0, "close": 296.0, "dealer_lots": -414, "foreign_lots": -2429, "industry": "電子零組件", "institution_20d_lots": -11071, "institution_5d_lots": -2318, "institution_lots": -2836, "institution_value_100m": -8.4, "market": "上市", "name": "台虹", "rank": 6, "symbol": "8039", "trust_lots": 6, "turnover_100m": 194.9}, {"change_pct": -4.32, "close": 5975.0, "dealer_lots": -170, "foreign_lots": -379, "industry": "光電業", "institution_20d_lots": -3990, "institution_5d_lots": -1167, "institution_lots": -562, "institution_value_100m": -33.59, "market": "上市", "name": "大立光", "rank": 7, "symbol": "3008", "trust_lots": -13, "turnover_100m": 194.3}, {"change_pct": 0.0, "close": 547.0, "dealer_lots": -107, "foreign_lots": -3461, "industry": "電子零組件", "institution_20d_lots": 14404, "institution_5d_lots": -4969, "institution_lots": -2670, "institution_value_100m": -14.6, "market": "上市", "name": "臻鼎-KY", "rank": 8, "symbol": "4958", "trust_lots": 898, "turnover_100m": 166.6}, {"change_pct": -3.21, "close": 422.0, "dealer_lots": 16, "foreign_lots": -3935, "industry": "半導體業", "institution_20d_lots": -59003, "institution_5d_lots": -65937, "institution_lots": -4340, "institution_value_100m": -18.32, "market": "上市", "name": "南亞科", "rank": 9, "symbol": "2408", "trust_lots": -421, "turnover_100m": 164.9}, {"change_pct": 5.0, "close": 189.0, "dealer_lots": 1556, "foreign_lots": 32813, "industry": "電腦及週邊設備", "institution_20d_lots": 12550, "institution_5d_lots": 2874, "institution_lots": 42703, "institution_value_100m": 80.71, "market": "上市", "name": "緯創", "rank": 10, "symbol": "3231", "trust_lots": 8333, "turnover_100m": 157.7}], "tpex_index": {"change_pct": -1.57, "change_points": -6.17, "close": 387.88}, "window_days": ["2026-09-17", "2026-09-18", "2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-19", "2026-10-20"]}</script>
+<script>
+(function () {
+  'use strict';
+  var D = JSON.parse(document.getElementById('payload').textContent);
+  var root = document.documentElement;
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var LABELS = {
+    return_1d_pct: { name: '今日漲跌', kind: 'pct', note: '今日漲跌，產業市值加權，單位：%。' },
+    return_5d_pct: { name: '近 5 日漲跌', kind: 'pct', note: '近 5 日漲跌，產業市值加權，單位：%。用收盤價比較、未還原除權息。' },
+    return_20d_pct: { name: '近 20 日漲跌', kind: 'pct', note: '近 20 日漲跌，產業市值加權，單位：%。用收盤價比較、未還原除權息。' },
+    turnover_share_deviation_pp: { name: '比平常熱', kind: 'pp', note: '今日成交占比減去前 20 個交易日平均占比，單位：百分點。藍色＝比平常熱，灰色＝比平常冷；跟漲跌無關。' },
+    institution_value_100m: { name: '法人買賣超（估算）', kind: 'money', note: '上市櫃個股三大法人淨股數 × 收盤價，依產業加總，單位：億元。是估算，不是官方金額；紅＝買超、綠＝賣超。' }
+  };
+
+  try { var saved = localStorage.getItem('mf-theme'); if (saved === 'light' || saved === 'dark') root.dataset.theme = saved; } catch (e) {}
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+  function sv(tag, attrs) {
+    var node = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) node.setAttribute(k, attrs[k]);
+    return node;
+  }
+  function cssVar(name) { return getComputedStyle(root).getPropertyValue(name).trim(); }
+  function dir(v) { return v == null || v === 0 ? 'flat' : v > 0 ? 'up' : 'down'; }
+  function signed(v, digits, unit) {
+    if (v == null) return '—';
+    var body = Math.abs(v).toLocaleString('zh-TW', { minimumFractionDigits: digits, maximumFractionDigits: digits }) + unit;
+    if (Number(body.replace(/[^\d.]/g, '')) === 0) return Math.abs(0).toFixed(digits) + unit;
+    return v > 0 ? '▲ +' + body : '▼ −' + body;
+  }
+  function pct(v) { return signed(v, 1, '%'); }
+  function pp(v) {
+    if (v == null) return '—';
+    var body = Math.abs(v).toFixed(1);
+    return (Number(body) === 0 ? '' : v > 0 ? '+' : '−') + body + ' pp';
+  }
+  function num(v, d) {
+    if (v == null) return '—';
+    return v.toLocaleString('zh-TW', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  }
+  function lotsText(v) {
+    if (v == null) return '—';
+    return v === 0 ? '0 張' : (v > 0 ? '+' : '−') + Math.abs(v).toLocaleString('zh-TW') + ' 張';
+  }
+  function hexRgb(hex) {
+    var h = hex.replace('#', '');
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+  function mix(a, b, t) {
+    var x = hexRgb(a), y = hexRgb(b);
+    return 'rgb(' + x.map(function (c, i) { return Math.round(c + (y[i] - c) * t); }).join(',') + ')';
+  }
+  function diverging(v, clamp) {
+    if (v == null) return cssVar('--neutral');
+    var t = Math.min(Math.abs(v) / clamp, 1);
+    return mix(cssVar('--neutral'), v > 0 ? cssVar('--up') : cssVar('--down'), t);
+  }
+  function inkFor(rgb) {
+    var c = rgb.match(/\d+/g).map(Number).map(function (x) { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+    var lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    return lum > 0.32 ? '#0b0b0b' : '#ffffff';
+  }
+
+  // ---------- tooltip ----------
+  var tip = document.getElementById('tip');
+  function showTip(lines, x, y) {
+    tip.textContent = '';
+    lines.forEach(function (line, i) {
+      var row = el('div');
+      if (i === 0) { row.appendChild(el('b', null, line)); }
+      else { row.appendChild(el('span', 'k', line[0] + '　')); row.appendChild(el('span', line[2] || null, line[1])); }
+      tip.appendChild(row);
+    });
+    tip.hidden = false;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    var left = Math.min(x + 14, window.innerWidth - w - 8), top = y + 14;
+    if (top + h > window.innerHeight - 8) top = y - h - 14;
+    tip.style.left = Math.max(8, left) + 'px';
+    tip.style.top = Math.max(8, top) + 'px';
+  }
+  function hideTip() { tip.hidden = true; }
+  function industryTip(r) {
+    return [r.name,
+      ['成交占比', (r.turnover_share_pct == null ? '—' : r.turnover_share_pct.toFixed(1) + '%')],
+      ['比平常熱', pp(r.turnover_share_deviation_pp)],
+      ['今日漲跌', pct(r.return_1d_pct), dir(r.return_1d_pct)],
+      ['近 5 日', pct(r.return_5d_pct), dir(r.return_5d_pct)],
+      ['近 20 日', pct(r.return_20d_pct), dir(r.return_20d_pct)],
+      ['成交值', num(r.turnover_100m, 1) + ' 億'],
+      ['法人估算', signed(r.institution_value_100m, 1, ' 億'), dir(r.institution_value_100m)],
+      ['成分股', r.n_stocks + ' 檔（漲 ' + r.up + '／跌 ' + r.down + '）']];
+  }
+  function bindTip(node, lines) {
+    node.addEventListener('pointermove', function (e) { showTip(lines, e.clientX, e.clientY); });
+    node.addEventListener('pointerleave', hideTip);
+    node.addEventListener('focus', function () { var b = node.getBoundingClientRect(); showTip(lines, b.left + b.width / 2, b.top + b.height / 2); });
+    node.addEventListener('blur', hideTip);
+  }
+
+  // ---------- header, KPIs, summary ----------
+  function renderHeader() {
+    var sel = document.getElementById('dateSel');
+    (D.archive || [D.date]).forEach(function (day) {
+      var o = el('option', null, day); o.value = day; if (day === D.date) o.selected = true; sel.appendChild(o);
+    });
+    sel.addEventListener('change', function () { location.href = sel.value + '.html'; });
+    var status = document.getElementById('status');
+    status.textContent = '資料日 ' + D.date + '｜官方日資料已核對｜產生於 ' + (D.generated_at || '').replace('T', ' ').slice(0, 16);
+  }
+  function kpi(cap, val, small, cls) {
+    var box = el('div', 'kpi');
+    box.appendChild(el('div', 'cap', cap));
+    box.appendChild(el('div', 'val' + (cls ? ' ' + cls : ''), val));
+    if (Array.isArray(small)) {
+      var line = el('small');
+      small.forEach(function (part, i) { if (i) line.appendChild(document.createTextNode(' ')); line.appendChild(el('span', 'nowrap', part)); });
+      box.appendChild(line);
+    } else if (small) box.appendChild(el('small', null, small));
+    return box;
+  }
+  function renderKpis() {
+    var box = document.getElementById('kpis');
+    var t = D.taiex;
+    box.appendChild(t ? kpi('加權指數（收盤）', num(t.close, 2), [signed(t.change_points, 2, ' 點'), signed(t.change_pct, 2, '%')], null)
+                      : kpi('加權指數（收盤）', '—', '來源未提供'));
+    var tpex = D.tpex_index;
+    box.appendChild(tpex ? kpi('櫃買指數（收盤）', num(tpex.close, 2), [signed(tpex.change_points, 2, ' 點'), signed(tpex.change_pct, 2, '%')])
+                         : kpi('櫃買指數（收盤）', '—', '尚未接上，下一版補'));
+    var m = D.ordinary_turnover_by_market_100m || {};
+    var b = D.breadth;
+    box.appendChild(kpi('普通股成交值', num(D.ordinary_turnover_100m) + ' 億',
+      ['上市 ' + num(m['上市']) + '／上櫃 ' + num(m['上櫃']) + ' 億', '漲 ' + b.up + '／跌 ' + b.down + ' 檔']));
+    var r = D.industries;
+    if (r.length >= 2) box.appendChild(kpi('前兩大成交產業占比', (r[0].turnover_share_pct + r[1].turnover_share_pct).toFixed(1) + '%',
+      r[0].name + ' ' + r[0].turnover_share_pct.toFixed(1) + '%＋' + r[1].name + ' ' + r[1].turnover_share_pct.toFixed(1) + '%'));
+    var li = (D.listed_institutions_100m || {})['1d'];
+    box.appendChild(li ? kpi('上市三大法人合計', signed(li.total, 2, ' 億').replace(/^[▲▼] /, ''),
+      ['外資 ' + signed(li.foreign, 2, ''), '投信 ' + signed(li.trust, 2, ''), '自營 ' + signed(li.dealer, 2, '')], dir(li.total))
+      : kpi('上市三大法人合計', '—', '當日資料尚未取得'));
+    var kids = box.querySelectorAll('.kpi small');
+    if (t && kids[0]) kids[0].className = dir(t.change_pct);
+    if (tpex && kids[1]) kids[1].className = dir(tpex.change_pct);
+  }
+  function renderSummary() {
+    var ul = document.getElementById('summary');
+    D.summary.forEach(function (line) { ul.appendChild(el('li', null, line)); });
+  }
+
+  // ---------- treemap ----------
+  var mapGroup = 'all';
+  function squarify(items, W, H) {
+    var total = items.reduce(function (s, i) { return s + i.value; }, 0);
+    var scale = W * H / total, out = [], rect = { x: 0, y: 0, w: W, h: H }, row = [];
+    var nodes = items.map(function (i) { return { item: i, area: i.value * scale }; });
+    function worst(r, side) {
+      var s = 0, mx = 0, mn = Infinity;
+      r.forEach(function (n) { s += n.area; mx = Math.max(mx, n.area); mn = Math.min(mn, n.area); });
+      return Math.max(side * side * mx / (s * s), (s * s) / (side * side * mn));
+    }
+    function lay(r) {
+      var s = r.reduce(function (a, n) { return a + n.area; }, 0);
+      if (rect.w >= rect.h) {
+        var rw = s / rect.h, cy = rect.y;
+        r.forEach(function (n) { var nh = n.area / rw; out.push({ item: n.item, x: rect.x, y: cy, w: rw, h: nh }); cy += nh; });
+        rect = { x: rect.x + rw, y: rect.y, w: rect.w - rw, h: rect.h };
+      } else {
+        var rh = s / rect.w, cx = rect.x;
+        r.forEach(function (n) { var nw = n.area / rh; out.push({ item: n.item, x: cx, y: rect.y, w: nw, h: rh }); cx += nw; });
+        rect = { x: rect.x, y: rect.y + rh, w: rect.w, h: rect.h - rh };
+      }
+    }
+    var i = 0;
+    while (i < nodes.length) {
+      var side = Math.min(rect.w, rect.h);
+      if (!row.length || worst(row.concat([nodes[i]]), side) <= worst(row, side)) { row.push(nodes[i]); i++; }
+      else { lay(row); row = []; }
+    }
+    if (row.length) lay(row);
+    return out;
+  }
+  function renderTreemap() {
+    var box = document.getElementById('treemap');
+    box.textContent = '';
+    var W = box.clientWidth, H = box.clientHeight;
+    if (W <= 0 || H <= 0) return;  // not laid out yet (hidden pane); the resize handler draws it later
+    var items = D.industries.filter(function (r) {
+      return (r.turnover_share_pct || 0) > 0 && (mapGroup === 'all' || r.group === mapGroup);
+    }).map(function (r) { return { value: r.turnover_share_pct, row: r }; })
+      .sort(function (a, b) { return b.value - a.value; });
+    var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, height: H, role: 'img', 'aria-label': '產業成交熱力圖' });
+    squarify(items, W, H).forEach(function (cell) {
+      var r = cell.item.row, fill = diverging(r.return_1d_pct, 3), ink = inkFor(fill);
+      var g = sv('g', { tabindex: '0', role: 'button', 'aria-label': r.name + ' 成交占比 ' + r.turnover_share_pct.toFixed(1) + '%，今日 ' + pct(r.return_1d_pct) });
+      var w = Math.max(cell.w - 2, 0), h = Math.max(cell.h - 2, 0);
+      g.appendChild(sv('rect', { x: cell.x + 1, y: cell.y + 1, width: w, height: h, rx: 3, fill: fill }));
+      var fs = Math.max(11, Math.min(16, Math.sqrt(w * h) / 7));
+      var nameW = r.name.length * fs;
+      if (w > nameW + 12 && h > fs * 2.6) {
+        var t1 = sv('text', { x: cell.x + 8, y: cell.y + 6 + fs, fill: ink, 'font-size': fs, 'font-weight': 650 });
+        t1.textContent = r.name;
+        g.appendChild(t1);
+        var line2 = r.turnover_share_pct.toFixed(1) + '%　' + pct(r.return_1d_pct);
+        if (w > line2.length * fs * 0.62 + 12 && h > fs * 3.8) {
+          var t2 = sv('text', { x: cell.x + 8, y: cell.y + 10 + fs * 2.2, fill: ink, 'font-size': fs * 0.82 });
+          t2.textContent = line2;
+          g.appendChild(t2);
+        }
+      }
+      bindTip(g, industryTip(r));
+      svg.appendChild(g);
+    });
+    box.appendChild(svg);
+  }
+  function renderScale() {
+    var box = document.getElementById('mapScale');
+    box.textContent = '';
+    box.appendChild(el('span', null, '今日漲跌'));
+    box.appendChild(el('span', 'down', '▼ −3% 以下'));
+    var bar = el('span', 'bar');
+    bar.style.background = 'linear-gradient(90deg,' + cssVar('--down') + ',' + cssVar('--neutral') + ',' + cssVar('--up') + ')';
+    box.appendChild(bar);
+    box.appendChild(el('span', 'up', '▲ +3% 以上'));
+  }
+
+  // ---------- diverging bars ----------
+  var measure = 'return_1d_pct';
+  function niceStep(span) {
+    var raw = span / 6, mag = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / mag;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;
+  }
+  function kindFormat(kind) {
+    return kind === 'pp' ? pp : kind === 'money' ? function (v) { return signed(v, 1, ' 億'); } : pct;
+  }
+  function kindColor(kind, v) {
+    if (kind === 'pp') return v >= 0 ? cssVar('--accent') : cssVar('--cool');
+    return v >= 0 ? cssVar('--up') : cssVar('--down');
+  }
+  function renderBars() {
+    var spec = LABELS[measure];
+    document.getElementById('barNote').textContent = spec.note;
+    var rows = D.industries.filter(function (r) { return r[measure] != null; })
+      .sort(function (a, b) { return b[measure] - a[measure]; });
+    drawBars(document.getElementById('bars'), rows, {
+      name: spec.name, value: function (r) { return r[measure]; }, label: function (r) { return r.name; },
+      fmt: kindFormat(spec.kind), color: function (v) { return kindColor(spec.kind, v); }, tip: industryTip,
+      unit: spec.kind === 'pct' ? '%' : '', empty: '這個項目目前沒有資料。'
+    });
+  }
+  function stockTip(r) {
+    return [r.name + '（' + r.symbol + '）',
+      ['外資', lotsText(r.foreign_lots), dir(r.foreign_lots)],
+      ['投信', lotsText(r.trust_lots), dir(r.trust_lots)],
+      ['自營商', lotsText(r.dealer_lots), dir(r.dealer_lots)],
+      ['三大合計', lotsText(r.institution_lots), dir(r.institution_lots)],
+      ['近 5 日合計', lotsText(r.institution_5d_lots), dir(r.institution_5d_lots)],
+      ['估算金額', signed(r.institution_value_100m, 2, ' 億'), dir(r.institution_value_100m)]];
+  }
+  function renderInstBars() {
+    var rows = D.top10.filter(function (r) { return r.institution_value_100m != null; })
+      .sort(function (a, b) { return b.institution_value_100m - a.institution_value_100m; });
+    drawBars(document.getElementById('instBars'), rows, {
+      name: '法人買賣超估算', value: function (r) { return r.institution_value_100m; }, label: function (r) { return r.name; },
+      fmt: function (v) { return signed(v, 2, ' 億'); }, color: function (v) { return kindColor('money', v); }, tip: stockTip,
+      unit: '', empty: '當日個股法人資料尚未取得。'
+    });
+  }
+  function drawBars(box, rows, o) {
+    box.textContent = '';
+    if (!rows.length) { box.appendChild(el('p', 'gap', o.empty)); return; }
+    var W = box.clientWidth, rowH = 24, top = 26, labelW = Math.min(118, W * 0.3), valueW = 82;
+    if (W <= labelW + valueW + 20) return;  // not laid out yet; the resize handler draws it later
+    var H = top + rows.length * rowH + 8;
+    var lo = Math.min(0, Math.min.apply(null, rows.map(o.value)));
+    var hi = Math.max(0, Math.max.apply(null, rows.map(o.value)));
+    var step = niceStep((hi - lo) || 1);
+    lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+    var x0 = labelW + 8, x1 = W - valueW;
+    function sx(v) { return x0 + (v - lo) / ((hi - lo) || 1) * (x1 - x0); }
+    var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, height: H, role: 'img', 'aria-label': o.name + '長條圖' });
+    for (var v = lo; v <= hi + step / 2; v += step) {
+      var gx = sx(v);
+      svg.appendChild(sv('line', { x1: gx, x2: gx, y1: top - 6, y2: H - 8, stroke: Math.abs(v) < 1e-9 ? cssVar('--axis') : cssVar('--grid'), 'stroke-width': 1 }));
+      var tick = sv('text', { x: gx, y: 14, 'text-anchor': 'middle', 'font-size': 11, fill: cssVar('--muted') });
+      tick.textContent = (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(+v.toFixed(2)).toLocaleString('zh-TW') + o.unit;
+      svg.appendChild(tick);
+    }
+    var zero = sx(0);
+    rows.forEach(function (r, i) {
+      var y = top + i * rowH, val = o.value(r);
+      var g = sv('g', { tabindex: '0', role: 'button', 'aria-label': o.label(r) + ' ' + o.name + ' ' + o.fmt(val) });
+      g.appendChild(sv('rect', { x: 0, y: y, width: W, height: rowH, fill: 'transparent' }));
+      var name = sv('text', { x: labelW, y: y + rowH / 2 + 4, 'text-anchor': 'end', 'font-size': 12.5, fill: cssVar('--ink') });
+      name.textContent = o.label(r);
+      g.appendChild(name);
+      var end = sx(val), bh = 14, by = y + (rowH - bh) / 2, len = Math.abs(end - zero), rr = Math.min(4, len);
+      var color = o.color(val);
+      if (len > 0.5) {
+        var d = val >= 0
+          ? 'M' + zero + ',' + by + 'H' + (end - rr) + 'Q' + end + ',' + by + ' ' + end + ',' + (by + rr) + 'V' + (by + bh - rr) + 'Q' + end + ',' + (by + bh) + ' ' + (end - rr) + ',' + (by + bh) + 'H' + zero + 'Z'
+          : 'M' + zero + ',' + by + 'H' + (end + rr) + 'Q' + end + ',' + by + ' ' + end + ',' + (by + rr) + 'V' + (by + bh - rr) + 'Q' + end + ',' + (by + bh) + ' ' + (end + rr) + ',' + (by + bh) + 'H' + zero + 'Z';
+        g.appendChild(sv('path', { d: d, fill: color }));
+      }
+      var label = o.fmt(val);
+      var lx = val >= 0 ? Math.max(end, zero) + 6 : Math.min(end, zero) - 6;
+      var anchor = val >= 0 ? 'start' : 'end';
+      if (val < 0 && lx - label.length * 6.5 < x0) { lx = Math.max(end, zero) + 6; anchor = 'start'; }
+      var vt = sv('text', { x: lx, y: y + rowH / 2 + 4, 'text-anchor': anchor, 'font-size': 11.5, fill: cssVar('--ink2') });
+      vt.textContent = label;
+      g.appendChild(vt);
+      bindTip(g, o.tip(r));
+      svg.appendChild(g);
+    });
+    box.appendChild(svg);
+  }
+
+  // ---------- tables ----------
+  function cell(tr, text, cls, small) {
+    var td = el('td', cls, text);
+    if (small) td.appendChild(el('small', null, small));
+    tr.appendChild(td);
+    return td;
+  }
+  function header(table, names) {
+    var thead = el('thead'), tr = el('tr');
+    names.forEach(function (n) { tr.appendChild(el('th', null, n)); });
+    thead.appendChild(tr); table.appendChild(thead);
+  }
+  function renderTop10() {
+    var table = document.getElementById('top10');
+    header(table, ['排名／股票', '收盤', '漲跌', '成交值（億）', '外資（張）', '投信（張）', '自營商（張）', '三大合計（張）', '近 5 日（張）', '近 20 日（張）']);
+    var body = el('tbody');
+    D.top10.forEach(function (r) {
+      var tr = el('tr');
+      var first = cell(tr, r.rank + '　', null);
+      first.appendChild(el('span', 'name', r.name));
+      first.appendChild(el('small', null, r.symbol + '｜' + r.market + '｜' + r.industry));
+      cell(tr, num(r.close, r.close < 100 ? 2 : 1));
+      cell(tr, pct(r.change_pct), dir(r.change_pct));
+      cell(tr, num(r.turnover_100m, 1));
+      ['foreign_lots', 'trust_lots', 'dealer_lots', 'institution_lots', 'institution_5d_lots', 'institution_20d_lots']
+        .forEach(function (k) { cell(tr, lotsText(r[k]).replace(' 張', ''), dir(r[k])); });
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+  }
+  function renderListedInst() {
+    var table = document.getElementById('listedInst');
+    var data = D.listed_institutions_100m || {};
+    header(table, ['上市（億元）', '今日', '近 5 日', '近 20 日']);
+    var body = el('tbody');
+    [['foreign', '外資'], ['trust', '投信'], ['dealer', '自營商'], ['total', '合計']].forEach(function (pair) {
+      var tr = el('tr');
+      cell(tr, pair[1], pair[0] === 'total' ? 'name' : null);
+      ['1d', '5d', '20d'].forEach(function (span) {
+        var v = data[span] ? data[span][pair[0]] : null;
+        cell(tr, signed(v, span === '1d' ? 2 : 0, ''), dir(v));
+      });
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+  }
+  var sortKey = 'turnover_share_pct', query = '';
+  function renderIndustries() {
+    var table = document.getElementById('industries');
+    table.textContent = '';
+    header(table, ['產業／成分股', '成交占比', '比平常熱', '今日', '近 5 日', '近 20 日', '成交值（億）', '法人估算（億）', '市值占比']);
+    var body = el('tbody');
+    D.industries.filter(function (r) { return !query || r.name.indexOf(query) >= 0; })
+      .sort(function (a, b) { return (b[sortKey] == null ? -1e9 : b[sortKey]) - (a[sortKey] == null ? -1e9 : a[sortKey]); })
+      .forEach(function (r) {
+        var tr = el('tr');
+        var first = cell(tr, '', null);
+        first.appendChild(el('span', 'name', r.name));
+        first.appendChild(el('small', null, r.n_stocks + ' 檔（漲 ' + r.up + '／跌 ' + r.down + '）'));
+        cell(tr, r.turnover_share_pct == null ? '—' : r.turnover_share_pct.toFixed(1) + '%');
+        cell(tr, pp(r.turnover_share_deviation_pp));
+        cell(tr, pct(r.return_1d_pct), dir(r.return_1d_pct));
+        cell(tr, pct(r.return_5d_pct), dir(r.return_5d_pct));
+        cell(tr, pct(r.return_20d_pct), dir(r.return_20d_pct));
+        cell(tr, num(r.turnover_100m, 1));
+        cell(tr, signed(r.institution_value_100m, 1, ''), dir(r.institution_value_100m));
+        cell(tr, r.marketcap_share_pct == null ? '—' : r.marketcap_share_pct.toFixed(1) + '%');
+        body.appendChild(tr);
+      });
+    table.appendChild(body);
+  }
+
+  // ---------- private: research candidates ----------
+  function chipList(card, title, values, cls, empty) {
+    card.appendChild(el('h4', null, title));
+    var box = el('div', 'chips');
+    if (!values || !values.length) box.appendChild(el('span', 'chip miss', empty));
+    (values || []).forEach(function (v) { box.appendChild(el('span', 'chip' + (cls ? ' ' + cls : ''), v)); });
+    card.appendChild(box);
+  }
+  function renderCandidates() {
+    var C = D.candidates;
+    if (!D.private || !C) return;
+    document.getElementById('privateBanner').hidden = false;
+    document.getElementById('candidatePanel').hidden = false;
+    document.title = '台股資金流向（自己看）｜' + D.date;
+    document.querySelector('h1').textContent = '台股全市場資金流向（自己看）';
+    var note = document.getElementById('candidateNote');
+    var box = document.getElementById('candidates');
+    if (C.unavailable) { note.textContent = C.unavailable; return; }
+    note.textContent = '系統從全市場 ' + (C.evaluated_count == null ? '—' : C.evaluated_count) + ' 檔篩出的最終複核名單，排名、分數照系統原樣。'
+      + '分數代表「值得研究的程度」，不是報酬預測，也不是買進建議；「暫定」表示有資料還沒補齊。'
+      + (C.note ? '條件取自 ' + C.note.observation_date + ' 的每日筆記（chat 寫的條件式看法，不是系統結果）。' : '這一天沒有每日筆記，所以只有系統結果、沒有條件表。');
+    if (!C.items.length) { box.appendChild(el('p', 'gap', '今天系統沒有選出候選。')); return; }
+    C.items.forEach(function (c) {
+      var card = el('article', 'card');
+      var top = el('div', 'card-top');
+      var name = el('div', 'card-name', c.rank + '　' + c.name);
+      name.appendChild(el('small', null, c.symbol + '｜' + c.market + '｜' + (c.industry || '—')));
+      top.appendChild(name);
+      var price = el('div', 'card-price');
+      price.appendChild(el('div', null, c.close == null ? '—' : num(c.close, c.close < 100 ? 2 : 1)));
+      price.appendChild(el('div', dir(c.change_pct), pct(c.change_pct)));
+      top.appendChild(price);
+      card.appendChild(top);
+      var meta = el('div', 'card-meta');
+      meta.appendChild(el('span', 'badge', c.state));
+      meta.appendChild(document.createTextNode('分數 ' + num(c.final_score, 1) + '（整理 ' + num(c.setup_score, 0) + '／突破 ' + num(c.breakout_score, 0) + '）｜'
+        + c.tier + ' 級' + (c.provisional ? '・暫定' : '') + '｜成交 ' + num(c.turnover_100m, 1) + ' 億'));
+      card.appendChild(meta);
+      var flow = el('div', 'card-meta');
+      flow.appendChild(document.createTextNode('三大法人 今日 '));
+      flow.appendChild(el('span', dir(c.institution_lots), lotsText(c.institution_lots)));
+      flow.appendChild(document.createTextNode('；近 5 日 '));
+      flow.appendChild(el('span', dir(c.institution_5d_lots), lotsText(c.institution_5d_lots)));
+      card.appendChild(flow);
+      chipList(card, '支持', c.supports, null, '沒有達到門檻的支持項目');
+      chipList(card, '風險／反證', c.risks, 'risk', '系統沒有列出風險');
+      chipList(card, '缺少的資料', c.missing, 'miss', '沒有缺漏');
+      if (c.conditions) {
+        card.appendChild(el('h4', null, '每日筆記的條件'));
+        var ul = el('ul', 'cond');
+        Object.keys(c.conditions).forEach(function (k) {
+          var li = el('li'); li.appendChild(el('b', null, k + '：')); li.appendChild(document.createTextNode(c.conditions[k])); ul.appendChild(li);
+        });
+        card.appendChild(ul);
+      }
+      box.appendChild(card);
+    });
+  }
+
+  // ---------- gaps & footer ----------
+  function renderFooter() {
+    var gap = document.getElementById('gapNote');
+    gap.textContent = (D.gaps || []).length ? '尚未取得：' + D.gaps.join('、') + '。缺的部分顯示「—」，不放推估數字。' : '';
+    gap.hidden = !(D.gaps || []).length;
+    var f = document.getElementById('footer');
+    var lines = [
+      ['資料來源：', '證交所每日收盤行情與價格指數、三大法人買賣超日報（T86）、三大法人買賣金額統計表（BFI82U）；櫃買中心上櫃股票行情、三大法人買賣明細、上櫃股票當日彙總（' + D.window_days[0] + '～' + D.date + '，共 ' + D.window_days.length + ' 個交易日）；產業別與發行股數取自證交所／櫃買中心公司基本資料（出表日 ' + D.company_list_date + '）。'],
+      ['計算方式：', '普通股＝公司基本資料內、排除存託憑證的上市櫃股票，共 ' + D.stock_count + ' 檔。產業占比＝產業成交值合計÷普通股成交值合計；漲跌用「收盤價×發行股數」加權；今日漲跌用官方漲跌幅，5／20 日用收盤價比較、未還原除權息。發行股數為最新一版，用於過去 20 日的權重時是近似。'],
+      ['法人：', '個股法人以「張」呈現（1 張＝1,000 股），外資含外資自營商，自營商含自行買賣與避險；「法人估算」＝淨股數×當日收盤價，不是官方成交金額。上市法人金額是官方統計，只含上市。'],
+      ['提醒：', D.private
+        ? '這份「自己看」版本多了系統研究候選，只在本機，不含持股，也不是投資建議。'
+        : '這頁只有市場層級的公開資料，由程式自動產生，不含任何人的持股，也不是投資建議。']
+    ];
+    (D.notes || []).forEach(function (n) { lines.push(['注意：', n]); });
+    lines.forEach(function (pair) {
+      var p = el('div'); p.appendChild(el('b', null, pair[0])); p.appendChild(document.createTextNode(pair[1])); f.appendChild(p);
+    });
+  }
+
+  // ---------- controls ----------
+  function pressGroup(groupId, attr, value) {
+    document.querySelectorAll('#' + groupId + ' button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset[attr] === value)); });
+  }
+  document.getElementById('mapTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    mapGroup = b.dataset.group; pressGroup('mapTabs', 'group', mapGroup); renderTreemap();
+  });
+  document.getElementById('barTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    measure = b.dataset.measure; pressGroup('barTabs', 'measure', measure); renderBars();
+  });
+  document.getElementById('sortTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    sortKey = b.dataset.sort; pressGroup('sortTabs', 'sort', sortKey); renderIndustries();
+  });
+  document.getElementById('search').addEventListener('input', function (e) { query = e.target.value.trim(); renderIndustries(); });
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.dataset.theme = current === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('mf-theme', root.dataset.theme); } catch (e) {}
+    renderTreemap(); renderScale(); renderBars(); renderInstBars();
+  });
+  var resizeTimer;
+  window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { renderTreemap(); renderBars(); renderInstBars(); }, 150); });
+  window.addEventListener('scroll', hideTip, { passive: true });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) { renderTreemap(); renderBars(); renderInstBars(); }
+  });
+
+  renderHeader(); renderKpis(); renderSummary(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
+  renderTop10(); renderIndustries(); renderListedInst(); renderInstBars(); renderFooter();
+})();
+</script>
+</body>
+</html>
