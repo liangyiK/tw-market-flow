@@ -118,6 +118,11 @@ footer b{color:var(--ink)}
 .presence .dot{display:inline-block;width:12px;height:12px;border-radius:3px;border:1.5px solid var(--accent)}
 .presence .dot.on{background:var(--accent)}
 .presence .dot.none{border-style:dashed;border-color:var(--axis)}
+.flow{display:inline-flex;gap:3px;vertical-align:middle}
+.flow span{display:inline-block;width:16px;height:16px;border-radius:3px;background:var(--neutral)}
+.flow span.up{background:var(--up)}.flow span.down{background:var(--down)}
+.flag{color:var(--up-text);font-weight:650}
+.flag::before{content:"⚠ "}
 @media (max-width:640px){.wrap{padding:24px 16px 40px}h1{font-size:24px}.top{align-items:flex-start;gap:18px}.top>div{min-width:0;max-width:100%}.controls{gap:8px}.treemap{height:380px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:14px}.kpi .val{font-size:21px}.status{text-align:left}.panel{padding:18px 16px}.card{padding:18px}.head{align-items:flex-start}.scroll-hint{display:block;margin:8px 0;color:var(--muted);font-size:12px}.tabs{gap:8px}.report-meta{gap:8px 16px}.report-meta span{flex:1 1 140px}}
 </style>
 </head>
@@ -255,6 +260,24 @@ footer b{color:var(--ink)}
     <p class="detail">三大法人合計淨股數 × 當日收盤價，單位：億元。這是估算，不是法人實際成交金額；紅＝買超、綠＝賣超。</p>
     <div class="bars" id="instBars"></div>
     <p class="gap" id="gapNote"></p>
+  </section>
+
+  <section class="panel" id="flowPanel" hidden>
+    <div class="head">
+      <h2>法人進出型態（近 5 日）</h2>
+      <div class="tabs" role="group" aria-label="法人範圍" id="flowBasisTabs">
+        <button type="button" data-basis="foreign_trust" aria-pressed="true">外資＋投信</button>
+        <button type="button" data-basis="total" aria-pressed="false">三大法人合計</button>
+      </div>
+    </div>
+    <p class="detail" id="flowNote"></p>
+    <div class="tabs" role="group" aria-label="排序" id="flowSortTabs">
+      <button type="button" data-sort="churn" aria-pressed="true">依反覆度</button>
+      <button type="button" data-sort="listed_days" aria-pressed="false">依進前十天數</button>
+      <button type="button" data-sort="net_lots" aria-pressed="false">依 5 日淨額</button>
+    </div>
+    <p class="scroll-hint">表格可左右滑動 →</p>
+    <div class="scroll"><table id="flowTable"></table></div>
   </section>
 
   <footer id="footer"></footer>
@@ -887,6 +910,59 @@ footer b{color:var(--ink)}
     });
     table.appendChild(body);
   }
+  // ---------- institutional flow patterns ----------
+  var FLOW = D.flow_patterns, flowBasis = 'foreign_trust', flowSort = 'churn';
+  var MARKET_NAMES = { listed: '上市', otc: '上櫃' };
+  var FLOW_SORTS = {
+    churn: function (a, b) { return b.churn - a.churn || b.listed_days - a.listed_days; },
+    listed_days: function (a, b) { return b.listed_days - a.listed_days || b.churn - a.churn; },
+    net_lots: function (a, b) { return Math.abs(b.net_lots) - Math.abs(a.net_lots); }
+  };
+  // Red = net buy, green = net sell; opacity scales with the row's largest day, so the theme switch needs no redraw.
+  function flowStrip(lots, dates) {
+    var box = el('span', 'flow'), max = Math.max.apply(null, lots.map(Math.abs).concat([1]));
+    lots.forEach(function (v, i) {
+      var cell = el('span', dir(v));
+      if (v) cell.style.opacity = (0.3 + 0.7 * Math.abs(v) / max).toFixed(2);
+      var text = (dates ? dates[i] + ' ' : '') + lotsText(v);
+      cell.title = text;
+      cell.setAttribute('role', 'img');
+      cell.setAttribute('aria-label', text);
+      box.appendChild(cell);
+    });
+    return box;
+  }
+  function renderFlow() {
+    if (!FLOW) return;
+    document.getElementById('flowPanel').hidden = false;
+    document.getElementById('flowNote').textContent = (flowBasis === 'total'
+      ? '三大法人合計（含自營商；自營商避險部位常每天來回，型態會比較雜）'
+      : '外資＋投信（不含自營商）') + '每日淨買賣超，單位：張。列出 ' + FLOW.dates[0] + '～' + FLOW.dates[FLOW.dates.length - 1]
+      + ' 中至少 2 天進入當日普通股淨買超或淨賣超前 10 名的股票（依淨股數×收盤價估算金額排名，避免低價股因張數大而佔滿）。'
+      + '反覆度＝1−｜5 日淨額｜÷ 每日買賣超絕對值加總：0＝每天同方向，接近 1＝買進和賣出互相抵銷。方向翻轉 2 次以上且反覆度 0.6 以上標為「來回進出」。'
+      + '這是籌碼型態的描述，不是買賣建議，也不影響系統分數。';
+    var table = document.getElementById('flowTable');
+    table.textContent = '';
+    var rows = FLOW.bases[flowBasis].slice().sort(FLOW_SORTS[flowSort]);
+    if (!rows.length) { table.appendChild(el('caption', 'gap', '這段期間沒有股票至少 2 天進入前 10 名。')); return; }
+    header(table, ['股票', '近 5 日（' + md(FLOW.dates[0]) + '→' + md(FLOW.dates[FLOW.dates.length - 1]) + '）', '進前十（天）', '翻轉（次）', '5 日淨額（張）', '反覆度', '型態']);
+    var body = el('tbody');
+    rows.forEach(function (r) {
+      var tr = el('tr');
+      var first = cell(tr, '', null);
+      first.appendChild(el('span', 'name', r.name));
+      first.appendChild(el('small', null, r.symbol + '｜' + MARKET_NAMES[r.market] + '｜' + r.industry));
+      cell(tr, '').appendChild(flowStrip(r.daily_lots, FLOW.dates));
+      cell(tr, String(r.listed_days));
+      cell(tr, String(r.flips));
+      cell(tr, lotsText(r.net_lots).replace(' 張', ''), dir(r.net_lots));
+      cell(tr, r.churn.toFixed(2));
+      cell(tr, r.label, r.label === '來回進出' ? 'flag' : null);
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+  }
+
   var sortKey = 'turnover_share_pct', query = '';
   function renderIndustries() {
     var table = document.getElementById('industries');
@@ -962,6 +1038,14 @@ footer b{color:var(--ink)}
       flow.appendChild(document.createTextNode('；近 5 日 '));
       flow.appendChild(el('span', dir(c.institution_5d_lots), lotsText(c.institution_5d_lots)));
       card.appendChild(flow);
+      if (c.flow_pattern) {
+        var fp = c.flow_pattern, pattern = el('div', 'card-meta');
+        pattern.appendChild(document.createTextNode('外資＋投信近 5 日 '));
+        pattern.appendChild(flowStrip(fp.daily_lots, FLOW && FLOW.dates));
+        pattern.appendChild(document.createTextNode(' 反覆度 ' + fp.churn.toFixed(2) + '・'));
+        pattern.appendChild(el('span', fp.label === '來回進出' ? 'flag' : null, fp.label));
+        card.appendChild(pattern);
+      }
       if (c.kline && HIST) {
         var kbox = el('div', 'chart kline');
         card.appendChild(kbox);
@@ -1040,6 +1124,14 @@ footer b{color:var(--ink)}
     var b = e.target.closest('button'); if (!b) return;
     heatMetric = b.dataset.heat; pressGroup('heatTabs', 'heat', heatMetric); renderHeat();
   });
+  document.getElementById('flowBasisTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    flowBasis = b.dataset.basis; pressGroup('flowBasisTabs', 'basis', flowBasis); renderFlow();
+  });
+  document.getElementById('flowSortTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    flowSort = b.dataset.sort; pressGroup('flowSortTabs', 'sort', flowSort); renderFlow();
+  });
   document.getElementById('instTabs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     instField = b.dataset.inst; pressGroup('instTabs', 'inst', instField); renderInstHistory();
@@ -1074,7 +1166,7 @@ footer b{color:var(--ink)}
   });
 
   renderHeader(); renderKpis(); renderSummary(); renderBreadth(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
-  renderHeat(); renderTop10(); renderIndustries(); renderListedInst(); renderInstHistory(); renderInstBars(); renderFooter();
+  renderHeat(); renderTop10(); renderIndustries(); renderListedInst(); renderInstHistory(); renderInstBars(); renderFlow(); renderFooter();
 })();
 </script>
 </body>
