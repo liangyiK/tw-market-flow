@@ -1128,7 +1128,22 @@ footer b{color:var(--ink)}
     ['opportunity', 'attention'].forEach(function (key) {
       document.getElementById('discovery-' + key).hidden = method !== key;
     });
-    if (method === 'system') renderKlines();  // hidden cards could not be measured
+  });
+  document.getElementById('mapTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    mapGroup = b.dataset.group; pressGroup('mapTabs', 'group', mapGroup); renderTreemap();
+  });
+  document.getElementById('barTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    measure = b.dataset.measure; pressGroup('barTabs', 'measure', measure); renderBars();
+  });
+  document.getElementById('sortTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    sortKey = b.dataset.sort; pressGroup('sortTabs', 'sort', sortKey); renderIndustries();
+  });
+  // Multi-day chart controls stay after the research-tab block above, which tests run on its own.
+  if (researchTabs) researchTabs.addEventListener('click', function () {
+    if (!document.getElementById('candidates').hidden) renderKlines();  // hidden cards could not be measured
   });
   document.getElementById('heatTabs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
@@ -1145,18 +1160,6 @@ footer b{color:var(--ink)}
   document.getElementById('instTabs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     instField = b.dataset.inst; pressGroup('instTabs', 'inst', instField); renderInstHistory();
-  });
-  document.getElementById('mapTabs').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    mapGroup = b.dataset.group; pressGroup('mapTabs', 'group', mapGroup); renderTreemap();
-  });
-  document.getElementById('barTabs').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    measure = b.dataset.measure; pressGroup('barTabs', 'measure', measure); renderBars();
-  });
-  document.getElementById('sortTabs').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    sortKey = b.dataset.sort; pressGroup('sortTabs', 'sort', sortKey); renderIndustries();
   });
   document.getElementById('search').addEventListener('input', function (e) { query = e.target.value.trim(); renderIndustries(); });
   document.getElementById('themeBtn').addEventListener('click', function () {
