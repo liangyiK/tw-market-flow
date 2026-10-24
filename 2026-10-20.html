@@ -106,6 +106,18 @@ footer b{color:var(--ink)}
 .cond{font-size:12.5px;margin:0;padding-left:0;list-style:none}
 .cond li{margin:3px 0}
 .cond b{color:var(--ink2);font-weight:600}
+.chart{position:relative;width:100%;min-width:0}
+.chart svg{display:block;width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink2);margin:0 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:16px;border-top:2px solid var(--accent)}
+.legend i.dash{border-top-style:dashed;border-color:var(--ink2)}
+.legend i.box{width:10px;height:10px;border:0;border-radius:2px}
+.kline{margin:12px 0 0}
+.presence{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:12px;color:var(--ink2);margin-top:8px}
+.presence .dot{display:inline-block;width:12px;height:12px;border-radius:3px;border:1.5px solid var(--accent)}
+.presence .dot.on{background:var(--accent)}
+.presence .dot.none{border-style:dashed;border-color:var(--axis)}
 @media (max-width:640px){.wrap{padding:24px 16px 40px}h1{font-size:24px}.top{align-items:flex-start;gap:18px}.top>div{min-width:0;max-width:100%}.controls{gap:8px}.treemap{height:380px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:14px}.kpi .val{font-size:21px}.status{text-align:left}.panel{padding:18px 16px}.card{padding:18px}.head{align-items:flex-start}.scroll-hint{display:block;margin:8px 0;color:var(--muted);font-size:12px}.tabs{gap:8px}.report-meta{gap:8px 16px}.report-meta span{flex:1 1 140px}}
 </style>
 </head>
@@ -138,6 +150,13 @@ footer b{color:var(--ink)}
   <section class="panel">
     <h2>今日重點</h2>
     <ul class="summary" id="summary"></ul>
+  </section>
+
+  <section class="panel" id="breadthPanel" hidden>
+    <h2>市場寬度</h2>
+    <p class="detail" id="breadthNote"></p>
+    <div class="legend" id="breadthLegend"></div>
+    <div class="chart" id="breadthChart"></div>
   </section>
 
   <section class="panel" id="candidatePanel" hidden>
@@ -179,6 +198,20 @@ footer b{color:var(--ink)}
     <div class="bars" id="bars"></div>
   </section>
 
+  <section class="panel" id="heatPanel" hidden>
+    <div class="head">
+      <h2>產業輪動時序</h2>
+      <div class="tabs" role="group" aria-label="時序項目" id="heatTabs">
+        <button type="button" data-heat="return_pct" aria-pressed="true">每日漲跌</button>
+        <button type="button" data-heat="share_deviation_pp" aria-pressed="false">比平常熱</button>
+      </div>
+    </div>
+    <p class="detail" id="heatNote"></p>
+    <p class="scroll-hint">圖表可左右滑動 →</p>
+    <div class="scroll"><div class="chart" id="heatChart"></div></div>
+    <div class="scale" id="heatScale"></div>
+  </section>
+
   <section class="panel">
     <h2>個股成交值前 10 名</h2>
     <p class="detail">上市＋上櫃普通股，依當日成交值排序（一般交易，不含盤後定價、零股、鉅額）。這是成交排行，不是推薦名單。</p>
@@ -205,6 +238,19 @@ footer b{color:var(--ink)}
     <h2>三大法人</h2>
     <p class="detail">上市市場整體金額來自證交所「三大法人買賣金額統計表」（官方金額，不含上櫃）。外資含外資自營商；自營商含自行買賣與避險。</p>
     <div class="scroll"><table id="listedInst" class="narrow"></table></div>
+    <div id="instHistoryBlock" hidden>
+      <div class="head">
+        <h3>上市三大法人逐日</h3>
+        <div class="tabs" role="group" aria-label="法人別" id="instTabs">
+          <button type="button" data-inst="total" aria-pressed="true">合計</button>
+          <button type="button" data-inst="foreign" aria-pressed="false">外資</button>
+          <button type="button" data-inst="trust" aria-pressed="false">投信</button>
+          <button type="button" data-inst="dealer" aria-pressed="false">自營商</button>
+        </div>
+      </div>
+      <p class="detail" id="instHistoryNote"></p>
+      <div class="chart" id="instHistory"></div>
+    </div>
     <h3>成交值前 10 名：法人買賣超（估算）</h3>
     <p class="detail">三大法人合計淨股數 × 當日收盤價，單位：億元。這是估算，不是法人實際成交金額；紅＝買超、綠＝賣超。</p>
     <div class="bars" id="instBars"></div>
@@ -537,6 +583,264 @@ footer b{color:var(--ink)}
     box.appendChild(svg);
   }
 
+  // ---------- time series ----------
+  var HIST = D.history;
+  function md(day) { return day.slice(5).replace('-', '/'); }
+  function niceDomain(values, o) {
+    var lo = o.min != null ? o.min : Math.min.apply(null, values.concat(o.zero ? [0] : []));
+    var hi = o.max != null ? o.max : Math.max.apply(null, values.concat(o.zero ? [0] : []));
+    if (!values.length) { lo = o.min != null ? o.min : 0; hi = o.max != null ? o.max : 1; }
+    if (hi - lo < 1e-9) { hi += 1; lo -= 1; }
+    var step = niceStep((hi - lo) * 2);
+    if (o.min == null) lo = Math.floor(lo / step) * step;
+    if (o.max == null) hi = Math.ceil(hi / step) * step;
+    return { lo: lo, hi: hi, step: step };
+  }
+  function xAxis(svg, dates, X, plotW, y) {
+    var every = Math.max(1, Math.ceil(dates.length / Math.max(2, Math.floor(plotW / 64))));
+    dates.forEach(function (day, i) {
+      if (i % every) return;
+      var edge = X(i) < 20;  // a centred first label would spill past the left edge
+      var t = sv('text', { x: edge ? 0 : X(i), y: y, 'text-anchor': edge ? 'start' : 'middle', 'font-size': 11, fill: cssVar('--muted') });
+      t.textContent = md(day);
+      svg.appendChild(t);
+    });
+  }
+  function hover(svg, W, left, plotW, n, X, top, bottom, lines) {
+    var cross = sv('line', { y1: top, y2: bottom, stroke: cssVar('--axis'), 'stroke-width': 1, visibility: 'hidden' });
+    var hit = sv('rect', { x: left, y: top, width: plotW, height: bottom - top, fill: 'transparent' });
+    hit.addEventListener('pointermove', function (e) {
+      var b = svg.getBoundingClientRect();
+      var i = Math.max(0, Math.min(n - 1, Math.floor(((e.clientX - b.left) * W / b.width - left) / (plotW / n))));
+      cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('visibility', 'visible');
+      showTip(lines(i), e.clientX, e.clientY);
+    });
+    hit.addEventListener('pointerleave', function () { cross.setAttribute('visibility', 'hidden'); hideTip(); });
+    svg.appendChild(cross);
+    svg.appendChild(hit);
+  }
+  // Stacked panels on one date axis; each panel keeps its own y scale (never two scales in one panel).
+  function drawTimePanels(box, dates, panels, aria) {
+    box.textContent = '';
+    var W = box.clientWidth, n = dates.length;
+    if (W < 240 || !n) return;  // not laid out yet; the resize handler draws it later
+    var left = 4, right = 58, titleH = 20, gap = 14, axisH = 20, plotW = W - left - right;
+    function X(i) { return left + (i + 0.5) * plotW / n; }
+    var total = panels.reduce(function (s, p) { return s + titleH + p.height + gap; }, 0) + axisH;
+    var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + total, height: total, role: 'img', 'aria-label': aria });
+    var y0 = 0;
+    panels.forEach(function (p) {
+      var values = [];
+      p.series.forEach(function (s) { s.values.forEach(function (v) { if (v != null) values.push(v); }); });
+      var dom = niceDomain(values, p), top = y0 + titleH, bottom = top + p.height;
+      function Y(v) { return bottom - (v - dom.lo) / (dom.hi - dom.lo) * p.height; }
+      var title = sv('text', { x: left, y: y0 + 13, 'font-size': 12, fill: cssVar('--ink2') });
+      title.textContent = p.title;
+      svg.appendChild(title);
+      for (var v = dom.lo; v <= dom.hi + dom.step / 2; v += dom.step) {
+        var base = p.zero && Math.abs(v) < 1e-9;
+        svg.appendChild(sv('line', { x1: left, x2: left + plotW, y1: Y(v), y2: Y(v), stroke: cssVar(base ? '--axis' : '--grid'), 'stroke-width': 1 }));
+        var tick = sv('text', { x: left + plotW + 6, y: Y(v) + 4, 'font-size': 11, fill: cssVar('--muted') });
+        tick.textContent = p.tick(v);
+        svg.appendChild(tick);
+      }
+      (p.refs || []).forEach(function (ref) {
+        svg.appendChild(sv('line', { x1: left, x2: left + plotW, y1: Y(ref), y2: Y(ref), stroke: cssVar('--axis'), 'stroke-dasharray': '4 4' }));
+      });
+      p.series.forEach(function (s) {
+        if (s.type === 'bars') {
+          var bw = Math.max(1, Math.min(14, plotW / n - 2));
+          s.values.forEach(function (v, i) {
+            if (v == null || v === 0) return;
+            var a = Y(Math.max(v, 0)), b = Y(Math.min(v, 0));
+            svg.appendChild(sv('rect', { x: X(i) - bw / 2, y: a, width: bw, height: Math.max(1, b - a), rx: Math.min(2, bw / 4), fill: s.color(v) }));
+          });
+          return;
+        }
+        var d = '', pen = false;
+        s.values.forEach(function (v, i) {
+          if (v == null) { pen = false; return; }
+          d += (pen ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1);
+          pen = true;
+        });
+        if (d) svg.appendChild(sv('path', { d: d, fill: 'none', stroke: s.color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', 'stroke-dasharray': s.dash || 'none' }));
+      });
+      y0 = bottom + gap;
+    });
+    xAxis(svg, dates, X, plotW, total - 5);
+    hover(svg, W, left, plotW, n, X, 0, total - axisH, function (i) {
+      var lines = [dates[i]];
+      panels.forEach(function (p) {
+        p.series.forEach(function (s) {
+          var v = s.values[i];
+          lines.push([s.label, v == null ? '資料不足' : s.fmt(v), s.cls && v != null ? s.cls(v) : null]);
+        });
+      });
+      return lines;
+    });
+    box.appendChild(svg);
+  }
+  function legend(box, items) {
+    box.textContent = '';
+    items.forEach(function (item) {
+      var span = el('span'), mark = el('i', item[1]);
+      if (item[2]) mark.style[item[1] === 'box' ? 'background' : 'borderColor'] = item[2];
+      span.appendChild(mark);
+      span.appendChild(document.createTextNode(item[0]));
+      box.appendChild(span);
+    });
+  }
+  function renderBreadth() {
+    if (!HIST) return;
+    var b = HIST.breadth, ma60 = b.above_ma60_pct.filter(function (v) { return v != null; }).length;
+    document.getElementById('breadthPanel').hidden = false;
+    document.getElementById('breadthNote').textContent = '上市＋上櫃普通股。站上均線＝收盤價高於近 20／60 日收盤平均；新高／新低＝當日最高／最低超過前 60 個交易日。'
+      + '收盤價未還原除權息。共 ' + HIST.dates.length + ' 個交易日（' + HIST.dates[0] + '～' + HIST.dates[HIST.dates.length - 1] + '）'
+      + (ma60 < HIST.dates.length ? '；60 日指標需要滿 60 個交易日的已核對資料，目前只有最近 ' + ma60 + ' 天，前段留白。' : '。');
+    legend(document.getElementById('breadthLegend'), [['站上 20 日線', '', cssVar('--accent')], ['站上 60 日線', 'dash', null],
+      ['創 60 日新高', 'box', cssVar('--up')], ['創 60 日新低', 'box', cssVar('--down')], ['加權指數', '', cssVar('--ink')]]);
+    var count = function (v) { return Math.abs(v).toLocaleString('zh-TW') + ' 檔'; };
+    drawTimePanels(document.getElementById('breadthChart'), HIST.dates, [
+      { title: '站上均線比例（%）', height: 130, min: 0, max: 100, refs: [50], tick: function (v) { return v + '%'; }, series: [
+        { label: '站上 20 日線', values: b.above_ma20_pct, color: cssVar('--accent'), fmt: function (v) { return v.toFixed(1) + '%'; } },
+        { label: '站上 60 日線', values: b.above_ma60_pct, color: cssVar('--ink2'), dash: '5 4', fmt: function (v) { return v.toFixed(1) + '%'; } }] },
+      { title: '創 60 日新高／新低（檔）', height: 80, zero: true, tick: function (v) { return Math.abs(v).toLocaleString('zh-TW'); }, series: [
+        { type: 'bars', label: '新高', values: b.new_high_60, color: function () { return cssVar('--up'); }, fmt: count, cls: function () { return 'up'; } },
+        { type: 'bars', label: '新低', values: b.new_low_60.map(function (v) { return v == null ? null : -v; }), color: function () { return cssVar('--down'); }, fmt: count, cls: function () { return 'down'; } }] },
+      { title: '加權指數', height: 90, tick: function (v) { return num(v); }, series: [
+        { label: '加權指數', values: HIST.taiex, color: cssVar('--ink'), fmt: function (v) { return num(v, 2); } }] }
+    ], '市場寬度：站上均線比例、60 日新高新低家數與加權指數，' + HIST.dates[0] + ' 至 ' + HIST.dates[HIST.dates.length - 1]);
+  }
+
+  var instField = 'total';
+  var INST_NAMES = { total: '三大法人合計', foreign: '外資', trust: '投信', dealer: '自營商' };
+  function renderInstHistory() {
+    var F = HIST && HIST.listed_institutions_100m;
+    if (!F) return;
+    document.getElementById('instHistoryBlock').hidden = false;
+    var daily = F[instField], sum = 0, running = daily.map(function (v) { if (v == null) return null; sum += v; return sum; });
+    document.getElementById('instHistoryNote').textContent = '證交所三大法人買賣金額統計表（官方金額，只含上市），單位：億元。上圖每日買賣超（紅＝買超、綠＝賣超），下圖自 '
+      + F.dates[0] + ' 起累計；缺資料的日子留白，不補數字。';
+    var money = function (v) { return signed(v, 2, ' 億'); };
+    drawTimePanels(document.getElementById('instHistory'), F.dates, [
+      { title: INST_NAMES[instField] + '：每日買賣超（億元）', height: 110, zero: true, tick: function (v) { return num(v); }, series: [
+        { type: 'bars', label: '當日', values: daily, color: function (v) { return kindColor('money', v); }, fmt: money, cls: dir }] },
+      { title: INST_NAMES[instField] + '：累計（億元）', height: 90, zero: true, tick: function (v) { return num(v); }, series: [
+        { label: '累計', values: running, color: cssVar('--accent'), fmt: money, cls: dir }] }
+    ], '上市' + INST_NAMES[instField] + '逐日買賣超與累計，' + F.dates[0] + ' 至 ' + F.dates[F.dates.length - 1]);
+  }
+
+  var heatMetric = 'return_pct';
+  var HEAT = {
+    return_pct: { name: '每日漲跌', note: '每格＝該產業當天市值加權漲跌（官方漲跌幅）。紅＝漲、綠＝跌，顏色在 ±3% 封頂。只列今日成交占比 0.5% 以上的產業，依今日成交占比排序。', clamp: 3,
+      fmt: pct, color: function (v) { return diverging(v, 3); }, scale: ['▼ −3% 以下', '▲ +3% 以上', '--down', '--up'] },
+    share_deviation_pp: { name: '比平常熱', note: '每格＝當天成交占比減去前 20 個交易日平均（百分點）。藍＝比平常熱、灰＝比平常冷，跟漲跌無關；前 20 日不足時留白。', clamp: 5,
+      fmt: pp, color: function (v) { return mix(cssVar('--neutral'), v > 0 ? cssVar('--accent') : cssVar('--cool'), Math.min(Math.abs(v) / 5, 1)); }, scale: ['冷 −5 pp 以下', '熱 +5 pp 以上', '--cool', '--accent'] }
+  };
+  function renderHeat() {
+    var heat = HIST && HIST.industry_heat;
+    if (!heat || !heat.rows.length) return;
+    document.getElementById('heatPanel').hidden = false;
+    var spec = HEAT[heatMetric], box = document.getElementById('heatChart');
+    document.getElementById('heatNote').textContent = spec.note;
+    box.textContent = '';
+    var avail = box.parentNode.clientWidth;
+    if (avail < 200) return;
+    var W = Math.max(avail, 560), labelW = 104, top = 22, rowH = 24, n = heat.dates.length;
+    var cellW = (W - labelW - 4) / n, total = top + heat.rows.length * rowH + 2;
+    var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + total, width: W, height: total, role: 'img',
+      'aria-label': '產業' + spec.name + '時序熱力圖，' + heat.dates[0] + ' 至 ' + heat.dates[n - 1] });
+    svg.style.width = W + 'px';
+    heat.dates.forEach(function (day, i) {
+      if (i % 5 && i !== n - 1) return;
+      var t = sv('text', { x: labelW + (i + 0.5) * cellW, y: 14, 'text-anchor': 'middle', 'font-size': 11, fill: cssVar('--muted') });
+      t.textContent = md(day);
+      svg.appendChild(t);
+    });
+    heat.rows.forEach(function (row, j) {
+      var y = top + j * rowH;
+      var name = sv('text', { x: labelW - 8, y: y + rowH / 2 + 4, 'text-anchor': 'end', 'font-size': 12.5, fill: cssVar('--ink') });
+      name.textContent = row.name;
+      svg.appendChild(name);
+      row[heatMetric].forEach(function (v, i) {
+        var rect = sv('rect', { x: labelW + i * cellW + 1, y: y + 1, width: Math.max(cellW - 2, 1), height: rowH - 2, rx: 2,
+          fill: v == null ? cssVar('--surface2') : spec.color(v), tabindex: '0', 'aria-label': row.name + ' ' + heat.dates[i] + ' ' + (v == null ? '資料不足' : spec.fmt(v)) });
+        bindTip(rect, [row.name + '　' + heat.dates[i], ['每日漲跌', pct(row.return_pct[i]), dir(row.return_pct[i])],
+          ['比平常熱', row.share_deviation_pp[i] == null ? '資料不足' : pp(row.share_deviation_pp[i])]]);
+        svg.appendChild(rect);
+      });
+    });
+    box.appendChild(svg);
+    var scale = document.getElementById('heatScale');
+    scale.textContent = '';
+    scale.appendChild(el('span', null, spec.name));
+    scale.appendChild(el('span', heatMetric === 'return_pct' ? 'down' : null, spec.scale[0]));
+    var bar = el('span', 'bar');
+    bar.style.background = 'linear-gradient(90deg,' + cssVar(spec.scale[2]) + ',' + cssVar('--neutral') + ',' + cssVar(spec.scale[3]) + ')';
+    scale.appendChild(bar);
+    scale.appendChild(el('span', heatMetric === 'return_pct' ? 'up' : null, spec.scale[1]));
+  }
+
+  // Candidate K line: candles + 20-day average + prior 60-day high, volume underneath.
+  var klines = [];
+  function drawKline(box, dates, k, label) {
+    box.textContent = '';
+    var W = box.clientWidth, n = k.close.length;
+    if (W < 200 || !n) return;
+    var left = 2, right = 48, priceH = 128, gap = 8, volH = 34, axisH = 18, plotW = W - left - right;
+    var total = priceH + gap + volH + axisH;
+    function X(i) { return left + (i + 0.5) * plotW / n; }
+    var values = [];
+    [k.high, k.low, k.ma20].forEach(function (arr) { arr.forEach(function (v) { if (v != null) values.push(v); }); });
+    if (k.prior_high_60 != null) values.push(k.prior_high_60);
+    var dom = niceDomain(values, {});
+    function Y(v) { return 4 + (dom.hi - v) / (dom.hi - dom.lo) * (priceH - 8); }
+    var vmax = Math.max.apply(null, k.volume_lots.filter(function (v) { return v != null; }).concat([1]));
+    var vb = priceH + gap + volH;
+    function V(v) { return vb - v / vmax * volH; }
+    var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + total, height: total, role: 'img',
+      'aria-label': label + ' 近 ' + n + ' 日 K 線，最新收盤 ' + num(k.close[n - 1], 2) });
+    for (var v = dom.lo; v <= dom.hi + dom.step / 2; v += dom.step) {
+      if (Y(v) < 9 || Y(v) > priceH - 2) continue;  // leave room for the tick label inside the frame
+      svg.appendChild(sv('line', { x1: left, x2: left + plotW, y1: Y(v), y2: Y(v), stroke: cssVar('--grid'), 'stroke-width': 1 }));
+      var tick = sv('text', { x: left + plotW + 5, y: Y(v) + 4, 'font-size': 11, fill: cssVar('--muted') });
+      tick.textContent = +v.toFixed(2);
+      svg.appendChild(tick);
+    }
+    if (k.prior_high_60 != null) {
+      svg.appendChild(sv('line', { x1: left, x2: left + plotW, y1: Y(k.prior_high_60), y2: Y(k.prior_high_60), stroke: cssVar('--muted'), 'stroke-dasharray': '4 4' }));
+    }
+    var bw = Math.max(1, Math.min(8, plotW / n * 0.62));
+    for (var i = 0; i < n; i++) {
+      if (k.close[i] == null) continue;
+      var o = k.open[i] == null ? k.close[i] : k.open[i];
+      var color = k.close[i] > o ? cssVar('--up') : k.close[i] < o ? cssVar('--down') : cssVar('--ink2');
+      svg.appendChild(sv('line', { x1: X(i), x2: X(i), y1: Y(k.high[i]), y2: Y(k.low[i]), stroke: color, 'stroke-width': 1 }));
+      svg.appendChild(sv('rect', { x: X(i) - bw / 2, y: Y(Math.max(o, k.close[i])), width: bw, height: Math.max(1, Math.abs(Y(o) - Y(k.close[i]))), fill: color }));
+      if (k.volume_lots[i]) svg.appendChild(sv('rect', { x: X(i) - bw / 2, y: V(k.volume_lots[i]), width: bw, height: vb - V(k.volume_lots[i]), fill: color, opacity: 0.55 }));
+    }
+    var d = '', pen = false;
+    k.ma20.forEach(function (v, i) { if (v == null) { pen = false; return; } d += (pen ? 'L' : 'M') + X(i).toFixed(1) + ',' + Y(v).toFixed(1); pen = true; });
+    if (d) svg.appendChild(sv('path', { d: d, fill: 'none', stroke: cssVar('--accent'), 'stroke-width': 1.5, 'stroke-linejoin': 'round' }));
+    var vt = sv('text', { x: left + plotW + 5, y: priceH + gap + 11, 'font-size': 11, fill: cssVar('--muted') });
+    vt.textContent = '量';
+    svg.appendChild(vt);
+    xAxis(svg, dates, X, plotW, total - 4);
+    hover(svg, W, left, plotW, n, X, 0, vb, function (j) {
+      var change = j > 0 && k.close[j - 1] ? (k.close[j] / k.close[j - 1] - 1) * 100 : null;
+      return [label + '　' + dates[j],
+        ['開／高', k.close[j] == null ? '沒有成交' : num(k.open[j], 2) + '／' + num(k.high[j], 2)],
+        ['低／收', k.close[j] == null ? '—' : num(k.low[j], 2) + '／' + num(k.close[j], 2)],
+        ['較前日', pct(change), dir(change)],
+        ['成交量', k.volume_lots[j] == null ? '—' : num(k.volume_lots[j]) + ' 張'],
+        ['20 日均線', k.ma20[j] == null ? '資料不足' : num(k.ma20[j], 2)]];
+    });
+    box.appendChild(svg);
+  }
+  function renderKlines() {
+    klines.forEach(function (item) { drawKline(item[0], item[1], item[2], item[3]); });
+  }
+
   // ---------- tables ----------
   function cell(tr, text, cls, small) {
     var td = el('td', cls, text);
@@ -632,7 +936,9 @@ footer b{color:var(--ink)}
     note.textContent = '系統從全市場 ' + (C.evaluated_count == null ? '—' : C.evaluated_count) + ' 檔篩出的最終複核名單，排名、分數照系統原樣。'
       + '分數是研究優先順序，不是報酬預測；「暫定」表示有資料還沒補齊。'
       + (D.private ? (C.note ? '條件取自 ' + C.note.observation_date + ' 的每日筆記（chat 寫的條件式看法，不是系統結果）。' : '這一天沒有每日筆記，所以只有系統結果、沒有條件表。')
-        : '名單依 ' + D.date + ' 盤後資料產生。');
+        : '名單依 ' + D.date + ' 盤後資料產生。')
+      + (C.items.some(function (c) { return c.presence && c.presence.length; })
+        ? '卡片最下方的方格是近 10 個交易日是否在當天名單：實心＝上榜、空心＝未上榜、虛線＝當天沒有存檔的盤後研究。' : '');
     if (!C.items.length) { box.appendChild(el('p', 'gap', '今天系統沒有選出候選。')); return; }
     C.items.forEach(function (c) {
       var card = el('article', 'card');
@@ -656,6 +962,13 @@ footer b{color:var(--ink)}
       flow.appendChild(document.createTextNode('；近 5 日 '));
       flow.appendChild(el('span', dir(c.institution_5d_lots), lotsText(c.institution_5d_lots)));
       card.appendChild(flow);
+      if (c.kline && HIST) {
+        var kbox = el('div', 'chart kline');
+        card.appendChild(kbox);
+        klines.push([kbox, HIST.dates.slice(-c.kline.close.length), c.kline, c.name + '（' + c.symbol + '）']);
+        card.appendChild(el('div', 'card-meta', '近 ' + c.kline.close.length + ' 日 K 線，未還原除權息｜藍線＝20 日均線'
+          + (c.kline.prior_high_60 != null ? '｜虛線＝前 60 日最高 ' + num(c.kline.prior_high_60, 2) : '')));
+      }
       chipList(card, '支持', c.supports, null, '沒有達到門檻的支持項目');
       chipList(card, '風險／反證', c.risks, 'risk', '系統沒有列出風險');
       chipList(card, '缺少的資料', c.missing, 'miss', '沒有缺漏');
@@ -667,8 +980,22 @@ footer b{color:var(--ink)}
         });
         card.appendChild(ul);
       }
+      if (c.presence && c.presence.length && HIST) {
+        var days = HIST.dates.slice(-c.presence.length), strip = el('div', 'presence');
+        strip.appendChild(el('span', null, '近 ' + c.presence.length + ' 個交易日名單'));
+        c.presence.forEach(function (on, i) {
+          var state = on == null ? '當天沒有存檔的盤後研究' : on ? '上榜' : '未上榜';
+          var dot = el('span', 'dot' + (on == null ? ' none' : on ? ' on' : ''));
+          dot.title = days[i] + ' ' + state;
+          dot.setAttribute('aria-label', days[i] + ' ' + state);
+          dot.setAttribute('role', 'img');
+          strip.appendChild(dot);
+        });
+        card.appendChild(strip);
+      }
       box.appendChild(card);
     });
+    renderKlines();
   }
 
   // ---------- gaps & footer ----------
@@ -707,6 +1034,15 @@ footer b{color:var(--ink)}
     ['opportunity', 'attention'].forEach(function (key) {
       document.getElementById('discovery-' + key).hidden = method !== key;
     });
+    if (method === 'system') renderKlines();  // hidden cards could not be measured
+  });
+  document.getElementById('heatTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    heatMetric = b.dataset.heat; pressGroup('heatTabs', 'heat', heatMetric); renderHeat();
+  });
+  document.getElementById('instTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    instField = b.dataset.inst; pressGroup('instTabs', 'inst', instField); renderInstHistory();
   });
   document.getElementById('mapTabs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
@@ -725,17 +1061,20 @@ footer b{color:var(--ink)}
     var current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     root.dataset.theme = current === 'dark' ? 'light' : 'dark';
     try { localStorage.setItem('mf-theme', root.dataset.theme); } catch (e) {}
-    renderTreemap(); renderScale(); renderBars(); renderInstBars();
+    renderCharts(); renderScale();
   });
+  function renderCharts() {
+    renderTreemap(); renderBars(); renderInstBars(); renderBreadth(); renderHeat(); renderInstHistory(); renderKlines();
+  }
   var resizeTimer;
-  window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { renderTreemap(); renderBars(); renderInstBars(); }, 150); });
+  window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderCharts, 150); });
   window.addEventListener('scroll', hideTip, { passive: true });
   document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) { renderTreemap(); renderBars(); renderInstBars(); }
+    if (!document.hidden) renderCharts();
   });
 
-  renderHeader(); renderKpis(); renderSummary(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
-  renderTop10(); renderIndustries(); renderListedInst(); renderInstBars(); renderFooter();
+  renderHeader(); renderKpis(); renderSummary(); renderBreadth(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
+  renderHeat(); renderTop10(); renderIndustries(); renderListedInst(); renderInstHistory(); renderInstBars(); renderFooter();
 })();
 </script>
 </body>
