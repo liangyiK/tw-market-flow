@@ -108,6 +108,10 @@ footer b{color:var(--ink)}
 .cond b{color:var(--ink2);font-weight:600}
 .chart{position:relative;width:100%;min-width:0}
 .chart svg{display:block;width:100%}
+/* Long-press on a chart shows its tooltip instead of selecting the page text. */
+.chart,.treemap,.bars,.flow{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* Time-series charts: slide a finger sideways to read each day; vertical swipes still scroll. */
+#breadthChart svg,#instHistory svg,.kline svg{touch-action:pan-y pinch-zoom}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink2);margin:0 0 10px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{display:inline-block;width:16px;border-top:2px solid var(--accent)}
@@ -382,7 +386,9 @@ footer b{color:var(--ink)}
       ['成分股', r.n_stocks + ' 檔（漲 ' + r.up + '／跌 ' + r.down + '）']];
   }
   function bindTip(node, lines) {
-    node.addEventListener('pointermove', function (e) { showTip(lines, e.clientX, e.clientY); });
+    function show(e) { showTip(lines, e.clientX, e.clientY); }
+    node.addEventListener('pointermove', show);
+    node.addEventListener('pointerdown', show);  // a touch shows the tip without needing to move
     node.addEventListener('pointerleave', hideTip);
     node.addEventListener('focus', function () { var b = node.getBoundingClientRect(); showTip(lines, b.left + b.width / 2, b.top + b.height / 2); });
     node.addEventListener('blur', hideTip);
@@ -632,13 +638,17 @@ footer b{color:var(--ink)}
   function hover(svg, W, left, plotW, n, X, top, bottom, lines) {
     var cross = sv('line', { y1: top, y2: bottom, stroke: cssVar('--axis'), 'stroke-width': 1, visibility: 'hidden' });
     var hit = sv('rect', { x: left, y: top, width: plotW, height: bottom - top, fill: 'transparent' });
-    hit.addEventListener('pointermove', function (e) {
+    function show(e) {
       var b = svg.getBoundingClientRect();
       var i = Math.max(0, Math.min(n - 1, Math.floor(((e.clientX - b.left) * W / b.width - left) / (plotW / n))));
       cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('visibility', 'visible');
       showTip(lines(i), e.clientX, e.clientY);
-    });
-    hit.addEventListener('pointerleave', function () { cross.setAttribute('visibility', 'hidden'); hideTip(); });
+    }
+    function hide() { cross.setAttribute('visibility', 'hidden'); hideTip(); }
+    hit.addEventListener('pointermove', show);
+    hit.addEventListener('pointerdown', show);
+    hit.addEventListener('pointerleave', hide);
+    hit.addEventListener('pointercancel', hide);  // the browser took over the touch to scroll
     svg.appendChild(cross);
     svg.appendChild(hit);
   }
