@@ -43,6 +43,9 @@ select,button,input{font:inherit;font-size:14px;color:var(--ink);background:var(
 button{cursor:pointer}
 button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);font-weight:700}
 button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.viewtabs{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;background:var(--page);padding:12px 0;margin:0 0 16px;border-bottom:1px solid var(--grid)}
+.viewtabs::-webkit-scrollbar{display:none}
+.viewtabs button{flex:0 0 auto;white-space:nowrap}
 .notice{font-size:13px;color:var(--ink2);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:20px 0}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;min-width:0}
@@ -127,7 +130,7 @@ footer b{color:var(--ink)}
 .flow span.up{background:var(--up)}.flow span.down{background:var(--down)}
 .flag{color:var(--up-text);font-weight:650}
 .flag::before{content:"⚠ "}
-@media (max-width:640px){.wrap{padding:24px 16px 40px}h1{font-size:24px}.top{align-items:flex-start;gap:18px}.top>div{min-width:0;max-width:100%}.controls{gap:8px}.treemap{height:380px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:14px}.kpi .val{font-size:21px}.status{text-align:left}.panel{padding:18px 16px}.card{padding:18px}.head{align-items:flex-start}.scroll-hint{display:block;margin:8px 0;color:var(--muted);font-size:12px}.tabs{gap:8px}.report-meta{gap:8px 16px}.report-meta span{flex:1 1 140px}}
+@media (max-width:640px){.wrap{padding:24px 16px 40px}h1{font-size:24px}.top{align-items:flex-start;gap:18px}.top>div{min-width:0;max-width:100%}.controls{gap:8px}.treemap{height:380px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:14px}.kpi .val{font-size:21px}.status{text-align:left}.panel{padding:18px 16px}.card{padding:18px}.head{align-items:flex-start}.scroll-hint{display:block;margin:8px 0;color:var(--muted);font-size:12px}.tabs{gap:8px}.viewtabs{gap:4px;padding:8px 0}.viewtabs button{padding:9px 10px}.report-meta{gap:8px 16px}.report-meta span{flex:1 1 140px}}
 </style>
 </head>
 <body>
@@ -150,11 +153,20 @@ footer b{color:var(--ink)}
     </div>
   </header>
 
+  <p class="private-banner" id="privateBanner" hidden>自己看 · 僅限本機。這份頁面包含私人筆記條件與候選歷史表現；分享時請使用公開網站。</p>
+
+  <nav class="viewtabs" id="viewTabs" aria-label="頁面功能">
+    <button type="button" data-view="overview" aria-pressed="true">總覽</button>
+    <button type="button" data-view="research" aria-pressed="false">研究名單</button>
+    <button type="button" data-view="industry" aria-pressed="false">產業</button>
+    <button type="button" data-view="institution" aria-pressed="false">法人籌碼</button>
+    <button type="button" data-view="retail" aria-pressed="false">融資當沖</button>
+  </nav>
+
+  <div class="view" id="view-overview">
   <p class="notice">成交值 ≠ 法人淨買超 ≠ 資金淨流入。顏色照台股習慣：紅＝上漲、綠＝下跌；數字都附 ▲▼ 與正負號。</p>
 
   <section class="kpis" id="kpis" aria-label="大盤摘要"></section>
-
-  <p class="private-banner" id="privateBanner" hidden>自己看 · 僅限本機。這份頁面包含私人筆記條件與候選歷史表現；分享時請使用公開網站。</p>
 
   <section class="panel">
     <h2>今日重點</h2>
@@ -168,6 +180,14 @@ footer b{color:var(--ink)}
     <div class="chart" id="breadthChart"></div>
   </section>
 
+  <section class="panel">
+    <h2>個股成交值前 10 名</h2>
+    <p class="detail">上市＋上櫃普通股，依當日成交值排序（一般交易，不含盤後定價、零股、鉅額）。這是成交排行，不是推薦名單。</p>
+    <div class="scroll"><table id="top10"></table></div>
+  </section>
+  </div>
+
+  <div class="view" id="view-research">
   <section class="panel" id="candidatePanel" hidden>
     <h2>系統研究候選</h2>
 
@@ -177,7 +197,9 @@ footer b{color:var(--ink)}
   </section>
 
   
+  </div>
 
+  <div class="view" id="view-industry">
   <section class="panel">
     <div class="head">
       <h2>產業成交熱力圖</h2>
@@ -222,12 +244,6 @@ footer b{color:var(--ink)}
   </section>
 
   <section class="panel">
-    <h2>個股成交值前 10 名</h2>
-    <p class="detail">上市＋上櫃普通股，依當日成交值排序（一般交易，不含盤後定價、零股、鉅額）。這是成交排行，不是推薦名單。</p>
-    <div class="scroll"><table id="top10"></table></div>
-  </section>
-
-  <section class="panel">
     <div class="head">
       <h2>產業明細</h2>
       <div class="tabs" role="group" aria-label="排序" id="sortTabs">
@@ -242,7 +258,9 @@ footer b{color:var(--ink)}
     <p class="detail">「比平常熱」＝今日成交占比減去前 20 個交易日的平均占比（百分點）。5／20 日漲跌是收盤價比較、市值加權、未還原除權息，不是成交額變化。</p>
     <div class="scroll"><table id="industries"></table></div>
   </section>
+  </div>
 
+  <div class="view" id="view-institution">
   <section class="panel">
     <h2>三大法人</h2>
     <p class="detail">上市市場整體金額來自證交所「三大法人買賣金額統計表」（官方金額，不含上櫃）。外資含外資自營商；自營商含自行買賣與避險。</p>
@@ -283,6 +301,30 @@ footer b{color:var(--ink)}
     <p class="scroll-hint">表格可左右滑動 →</p>
     <div class="scroll"><table id="flowTable"></table></div>
   </section>
+
+  </div>
+
+  <div class="view" id="view-retail">
+  <section class="panel" id="retailPanel" hidden>
+    <h2>融資融券與當沖</h2>
+    <p class="detail" id="retailNote"></p>
+    <div class="legend" id="retailLegend"></div>
+    <div class="chart" id="retailChart"></div>
+    <div id="retailListBlock" hidden>
+      <div class="head">
+        <h3 id="retailListTitle">個股</h3>
+        <div class="tabs" role="group" aria-label="個股名單" id="retailTabs">
+          <button type="button" data-list="margin_up" aria-pressed="true">融資增加</button>
+          <button type="button" data-list="margin_down" aria-pressed="false">融資減少</button>
+          <button type="button" data-list="daytrade" aria-pressed="false">當沖比最高</button>
+        </div>
+      </div>
+      <p class="detail" id="retailListNote"></p>
+      <p class="scroll-hint">表格可左右滑動 →</p>
+      <div class="scroll"><table id="retailTable"></table></div>
+    </div>
+  </section>
+  </div>
 
   <footer id="footer"></footer>
 </main>
@@ -401,7 +443,7 @@ footer b{color:var(--ink)}
     (D.archive || [D.date]).forEach(function (day) {
       var o = el('option', null, day); o.value = day; if (day === D.date) o.selected = true; sel.appendChild(o);
     });
-    sel.addEventListener('change', function () { location.href = sel.value + '.html'; });
+    sel.addEventListener('change', function () { location.href = sel.value + '.html' + location.hash; });  // keep the open view
     var status = document.getElementById('status');
     status.replaceChildren(el('span', null, '資料日 ' + D.date), el('span', null, '官方日資料已核對'),
       el('span', null, '資料更新 ' + (D.generated_at || '').replace('T', ' ').slice(0, 16)));
@@ -957,7 +999,9 @@ footer b{color:var(--ink)}
     table.textContent = '';
     var rows = FLOW.bases[flowBasis].slice().sort(FLOW_SORTS[flowSort]);
     if (!rows.length) { table.appendChild(el('caption', 'gap', '這段期間沒有股票至少 2 天進入前 10 名。')); return; }
-    header(table, ['股票', '近 5 日（' + md(FLOW.dates[0]) + '→' + md(FLOW.dates[FLOW.dates.length - 1]) + '）', '進前十（天）', '翻轉（次）', '5 日淨額（張）', '反覆度', '型態']);
+    var retail = RETAIL && RETAIL.flow_stocks;
+    header(table, ['股票', '近 5 日（' + md(FLOW.dates[0]) + '→' + md(FLOW.dates[FLOW.dates.length - 1]) + '）', '進前十（天）', '翻轉（次）', '5 日淨額（張）', '反覆度', '型態']
+      .concat(retail ? ['融資 5 日', '當沖比（5 日）'] : []));
     var body = el('tbody');
     rows.forEach(function (r) {
       var tr = el('tr');
@@ -970,6 +1014,75 @@ footer b{color:var(--ink)}
       cell(tr, lotsText(r.net_lots).replace(' 張', ''), dir(r.net_lots));
       cell(tr, r.churn.toFixed(2));
       cell(tr, r.label, r.label === '來回進出' ? 'flag' : null);
+      if (retail) {
+        var rs = retail[r.market + ':' + r.symbol] || {};
+        cell(tr, pct(rs.margin_change_pct), dir(rs.margin_change_pct));
+        daytradeCell(tr, rs.daytrade_pct_5d);
+      }
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+  }
+
+  // ---------- margin and day trading ----------
+  var RETAIL = D.retail, retailList = 'margin_up';
+  var RETAIL_LISTS = {
+    margin_up: '近 5 日融資增加最多的 20 檔普通股（依增加張數×收盤價估算金額排序，避免低價股因張數大而佔滿）',
+    margin_down: '近 5 日融資減少最多的 20 檔普通股（依減少張數×收盤價估算金額排序）',
+    daytrade: '近 5 日當沖比最高的 20 檔（只排近 5 日成交值前 300 名的普通股，避免成交稀少的股票因幾筆當沖就排上來）'
+  };
+  function ratio(v, d) { return v == null ? '—' : v.toFixed(d == null ? 1 : d) + '%'; }
+  function daytradeCell(tr, v) {
+    return cell(tr, ratio(v), v != null && v >= RETAIL.daytrade_flag_pct ? 'flag' : null);
+  }
+  function renderRetail() {
+    if (!RETAIL) return;
+    document.getElementById('retailPanel').hidden = false;
+    var pending = RETAIL.dates.filter(function (d, i) { return RETAIL.daytrade_final[i] === false; });
+    document.getElementById('retailNote').textContent = '融資＝向券商借錢買股，融資快速增加常代表散戶追價；融券＝借股票來賣（放空）。'
+      + '融資餘額是上市＋上櫃的官方融資金額合計，單位：億元，長條是每日增減（紅＝增加、綠＝減少）。'
+      + '當沖占成交值＝當日沖銷交易買進成交金額占市場成交金額的比重，取交易所公布值。'
+      + (pending.length ? '交易所會在之後兩個交易日內修正當沖數字，' + pending.map(md).join('、') + ' 仍是初值。' : '')
+      + '這是籌碼描述，不是買賣建議，也不影響系統分數。';
+    legend(document.getElementById('retailLegend'), [['融資餘額', '', cssVar('--accent')], ['每日增減', 'box', cssVar('--up')],
+      ['當沖占比：上市', '', cssVar('--ink')], ['當沖占比：上櫃', 'dash', null]]);
+    var share = function (v) { return v.toFixed(2) + '%'; };
+    drawTimePanels(document.getElementById('retailChart'), RETAIL.dates, [
+      { title: '融資餘額（億元，上市＋上櫃）', height: 110, tick: function (v) { return num(v); }, series: [
+        { label: '融資餘額', values: RETAIL.margin_amount_100m, color: cssVar('--accent'), fmt: function (v) { return num(v, 1) + ' 億'; } }] },
+      { title: '融資每日增減（億元）', height: 70, zero: true, tick: function (v) { return num(v); }, series: [
+        { type: 'bars', label: '增減', values: RETAIL.margin_change_100m, color: function (v) { return kindColor('money', v); },
+          fmt: function (v) { return signed(v, 1, ' 億'); }, cls: dir }] },
+      { title: '當沖占成交值（%）', height: 90, tick: function (v) { return v + '%'; }, series: [
+        { label: '當沖：上市', values: RETAIL.daytrade_pct.listed, color: cssVar('--ink'), fmt: share },
+        { label: '當沖：上櫃', values: RETAIL.daytrade_pct.otc, color: cssVar('--ink2'), dash: '5 4', fmt: share }] }
+    ], '融資餘額、每日增減與當沖占成交值，' + RETAIL.dates[0] + ' 至 ' + RETAIL.dates[RETAIL.dates.length - 1]);
+  }
+  function renderRetailList() {
+    var R = RETAIL && RETAIL.rankings;
+    if (!R) return;
+    document.getElementById('retailListBlock').hidden = false;
+    document.getElementById('retailListTitle').textContent = '個股（' + md(R.dates[0]) + '～' + md(R.dates[R.dates.length - 1]) + '）';
+    document.getElementById('retailListNote').textContent = RETAIL_LISTS[retailList] + '。5 日增減＝今日融資餘額比 ' + R.base_date
+      + ' 收盤後的餘額；使用率＝融資餘額÷融資限額；券資比＝融券餘額÷融資餘額；當沖比＝當沖買進成交金額÷成交金額（5 日合計），'
+      + RETAIL.daytrade_flag_pct + '% 以上標 ⚠。同一天整體市場的當沖占比：上市 ' + ratio(RETAIL.daytrade_pct.listed[RETAIL.dates.length - 1], 2)
+      + '、上櫃 ' + ratio(RETAIL.daytrade_pct.otc[RETAIL.dates.length - 1], 2) + '。';
+    var table = document.getElementById('retailTable');
+    table.textContent = '';
+    var rows = R.lists[retailList];
+    if (!rows.length) { table.appendChild(el('caption', 'gap', '這段期間沒有符合的股票。')); return; }
+    header(table, ['股票', '融資餘額（張）', '5 日增減（張）', '使用率', '券資比', '當沖比（5 日）', '5 日漲跌']);
+    var body = el('tbody');
+    rows.forEach(function (r) {
+      var tr = el('tr'), first = cell(tr, '', null);
+      first.appendChild(el('span', 'name', r.name));
+      first.appendChild(el('small', null, r.symbol + '｜' + MARKET_NAMES[r.market] + '｜' + r.industry));
+      cell(tr, num(r.margin_lots));
+      cell(tr, lotsText(r.margin_change_lots).replace(' 張', ''), dir(r.margin_change_lots), r.margin_change_pct == null ? null : pct(r.margin_change_pct));
+      cell(tr, ratio(r.margin_usage_pct));
+      cell(tr, ratio(r.short_ratio_pct));
+      daytradeCell(tr, r.daytrade_pct_5d);
+      cell(tr, pct(r.return_5d_pct), dir(r.return_5d_pct));
       body.appendChild(tr);
     });
     table.appendChild(body);
@@ -1058,6 +1171,15 @@ footer b{color:var(--ink)}
         pattern.appendChild(el('span', fp.label === '來回進出' ? 'flag' : null, fp.label));
         card.appendChild(pattern);
       }
+      if (c.retail && RETAIL) {
+        var rt = c.retail, retailLine = el('div', 'card-meta');
+        retailLine.appendChild(document.createTextNode('融資 ' + num(rt.margin_lots) + ' 張（5 日 '));
+        retailLine.appendChild(el('span', dir(rt.margin_change_pct), pct(rt.margin_change_pct)));
+        retailLine.appendChild(document.createTextNode('）・券資比 ' + ratio(rt.short_ratio_pct) + '・當沖比 5 日 '));
+        retailLine.appendChild(el('span', rt.daytrade_pct_5d != null && rt.daytrade_pct_5d >= RETAIL.daytrade_flag_pct ? 'flag' : null,
+          ratio(rt.daytrade_pct_5d)));
+        card.appendChild(retailLine);
+      }
       if (c.kline && HIST) {
         var kbox = el('div', 'chart kline');
         card.appendChild(kbox);
@@ -1109,6 +1231,8 @@ footer b{color:var(--ink)}
         : (D.public_candidates ? '這頁包含系統研究候選，排名與分數代表研究優先順序，不是報酬預測或投資建議。'
           : '這頁只有市場層級的公開資料，由程式自動產生，不含任何人的持股，也不是投資建議。')]
     ];
+    if (RETAIL) lines.splice(3, 0, ['融資與當沖：', '證交所「融資融券彙總」「當日沖銷交易標的及成交量值」、櫃買中心「上櫃股票融資融券餘額」「現股當沖交易統計資訊」（'
+      + RETAIL.dates[0] + '～' + RETAIL.dates[RETAIL.dates.length - 1] + '）。融資、融券以「張」呈現，融資餘額金額為官方融資金額；交易所在 T+2 前會修正當沖數字，之前顯示的是初值。']);
     (D.notes || []).forEach(function (n) { lines.push(['注意：', n]); });
     lines.forEach(function (pair) {
       var p = el('div'); p.appendChild(el('b', null, pair[0])); p.appendChild(document.createTextNode(pair[1])); f.appendChild(p);
@@ -1163,6 +1287,30 @@ footer b{color:var(--ink)}
     var b = e.target.closest('button'); if (!b) return;
     instField = b.dataset.inst; pressGroup('instTabs', 'inst', instField); renderInstHistory();
   });
+  document.getElementById('retailTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    retailList = b.dataset.list; pressGroup('retailTabs', 'list', retailList); renderRetailList();
+  });
+  // One view at a time; the link keeps it (#industry). A view whose panels all stayed hidden gets no button.
+  var VIEWS = ['overview', 'research', 'industry', 'institution', 'retail'];
+  function viewHasContent(name) {
+    return [].some.call(document.querySelectorAll('#view-' + name + ' > .panel, #view-' + name + ' > .kpis'),
+      function (node) { return !node.hidden; });
+  }
+  function showView(name, scroll) {
+    if (VIEWS.indexOf(name) < 0 || !viewHasContent(name)) name = 'overview';
+    VIEWS.forEach(function (v) { document.getElementById('view-' + v).hidden = v !== name; });
+    pressGroup('viewTabs', 'view', name);
+    try { history.replaceState(null, '', name === 'overview' ? location.pathname + location.search : '#' + name); } catch (e) {}
+    hideTip();
+    renderCharts();  // charts in a hidden view could not be measured
+    var top = document.querySelector('.top').getBoundingClientRect().bottom + window.scrollY;
+    if (scroll && window.scrollY > top) window.scrollTo(0, top);  // start the new view at its top, not mid-page
+  }
+  document.getElementById('viewTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (b) showView(b.dataset.view, true);
+  });
+  window.addEventListener('hashchange', function () { showView(location.hash.slice(1), true); });
   document.getElementById('search').addEventListener('input', function (e) { query = e.target.value.trim(); renderIndustries(); });
   document.getElementById('themeBtn').addEventListener('click', function () {
     var current = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -1171,7 +1319,7 @@ footer b{color:var(--ink)}
     renderCharts(); renderScale();
   });
   function renderCharts() {
-    renderTreemap(); renderBars(); renderInstBars(); renderBreadth(); renderHeat(); renderInstHistory(); renderKlines();
+    renderTreemap(); renderBars(); renderInstBars(); renderBreadth(); renderHeat(); renderInstHistory(); renderRetail(); renderKlines();
   }
   var resizeTimer;
   window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderCharts, 150); });
@@ -1181,7 +1329,10 @@ footer b{color:var(--ink)}
   });
 
   renderHeader(); renderKpis(); renderSummary(); renderBreadth(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
-  renderHeat(); renderTop10(); renderIndustries(); renderListedInst(); renderInstHistory(); renderInstBars(); renderFlow(); renderFooter();
+  renderHeat(); renderTop10(); renderIndustries(); renderListedInst(); renderInstHistory(); renderInstBars(); renderFlow();
+  renderRetail(); renderRetailList(); renderFooter();
+  VIEWS.forEach(function (v) { document.querySelector('#viewTabs [data-view="' + v + '"]').hidden = !viewHasContent(v); });
+  showView(location.hash.slice(1), false);
 })();
 </script>
 </body>
