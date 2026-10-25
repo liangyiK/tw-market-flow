@@ -107,7 +107,7 @@ footer b{color:var(--ink)}
 .cond li{margin:3px 0}
 .cond b{color:var(--ink2);font-weight:600}
 .chart{position:relative;width:100%;min-width:0}
-.chart svg{display:block;width:100%}
+.chart svg{display:block;width:100%;height:auto}
 /* Long-press on a chart shows its tooltip instead of selecting the page text. */
 .chart,.treemap,.bars,.flow{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* Time-series charts: slide a finger sideways to read each day; vertical swipes still scroll. */
@@ -656,7 +656,8 @@ footer b{color:var(--ink)}
   function drawTimePanels(box, dates, panels, aria) {
     box.textContent = '';
     var W = box.clientWidth, n = dates.length;
-    if (W < 240 || !n) return;  // not laid out yet; the resize handler draws it later
+    if (!W || !n) return;  // not laid out yet; the resize handler draws it later
+    W = Math.max(W, 240);  // a narrower box shows this drawing scaled down to fit
     var left = 4, right = 58, titleH = 20, gap = 14, axisH = 20, plotW = W - left - right;
     function X(i) { return left + (i + 0.5) * plotW / n; }
     var total = panels.reduce(function (s, p) { return s + titleH + p.height + gap; }, 0) + axisH;
@@ -778,7 +779,7 @@ footer b{color:var(--ink)}
     document.getElementById('heatNote').textContent = spec.note;
     box.textContent = '';
     var avail = box.parentNode.clientWidth;
-    if (avail < 200) return;
+    if (!avail) return;  // narrow screens scroll the 560px minimum sideways
     var W = Math.max(avail, 560), labelW = 104, top = 22, rowH = 24, n = heat.dates.length;
     var cellW = (W - labelW - 4) / n, total = top + heat.rows.length * rowH + 2;
     var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + total, width: W, height: total, role: 'img',
@@ -819,7 +820,8 @@ footer b{color:var(--ink)}
   function drawKline(box, dates, k, label) {
     box.textContent = '';
     var W = box.clientWidth, n = k.close.length;
-    if (W < 200 || !n) return;
+    if (!W || !n) return;
+    W = Math.max(W, 200);
     var left = 2, right = 48, priceH = 128, gap = 8, volH = 34, axisH = 18, plotW = W - left - right;
     var total = priceH + gap + volH + axisH;
     function X(i) { return left + (i + 0.5) * plotW / n; }
