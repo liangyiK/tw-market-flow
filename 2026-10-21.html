@@ -11,6 +11,7 @@
   --page:#f3f6fa;--surface:#fff;--surface2:#f0f4fa;--ink:#182a3a;--ink2:#526577;--muted:#526577;
   --grid:#dce4eb;--axis:#bac7d5;--border:#dce4eb;--accent:#2457bf;--accent-soft:#eaf0fc;
   --up:#c0392b;--down:#2aa198;--neutral:#e4e3de;--up-text:#a8322a;--down-text:#1b7b73;--cool:#9a9891;
+  --warn:#c98a12;--warn-text:#8a5a00;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
@@ -18,6 +19,7 @@
     --page:#0b1320;--surface:#121c2b;--surface2:#182437;--ink:#eef2f8;--ink2:#b7c3d3;--muted:#8d9aac;
     --grid:#223047;--axis:#33445c;--border:rgba(255,255,255,.10);--accent:#3987e5;--accent-soft:#1d3352;
     --up:#e05a5e;--down:#17a39b;--neutral:#3a4556;--up-text:#f08386;--down-text:#4cc8bd;--cool:#6b7789;
+    --warn:#d9a43a;--warn-text:#f2c46b;
   }
 }
 :root[data-theme="dark"]{
@@ -25,6 +27,7 @@
   --page:#0b1320;--surface:#121c2b;--surface2:#182437;--ink:#eef2f8;--ink2:#b7c3d3;--muted:#8d9aac;
   --grid:#223047;--axis:#33445c;--border:rgba(255,255,255,.10);--accent:#3987e5;--accent-soft:#1d3352;
   --up:#e05a5e;--down:#17a39b;--neutral:#3a4556;--up-text:#f08386;--down-text:#4cc8bd;--cool:#6b7789;
+  --warn:#d9a43a;--warn-text:#f2c46b;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -79,6 +82,7 @@ th{font-weight:600;color:var(--ink2);text-align:right;padding:12px;border-bottom
 td{padding:12px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 th:first-child,td:first-child{text-align:left}
 td small{display:block;color:var(--muted);font-size:11.5px}
+td.wide{white-space:normal;text-align:left;min-width:260px;overflow-wrap:anywhere}
 tbody tr:hover{background:var(--surface2)}
 .discovery-table td{white-space:normal;text-align:left;vertical-align:top;min-width:110px;overflow-wrap:anywhere}
 .discovery-table th{text-align:left}
@@ -130,6 +134,10 @@ footer b{color:var(--ink)}
 .flow span.up{background:var(--up)}.flow span.down{background:var(--down)}
 .flag{color:var(--up-text);font-weight:650}
 .flag::before{content:"⚠ "}
+.rtag{display:inline-block;font-size:11px;font-weight:700;line-height:1.5;border:1px solid;border-radius:5px;padding:0 5px;margin-left:6px;white-space:nowrap;vertical-align:1px;cursor:default}
+.rtag.dispo{color:var(--up-text);border-color:var(--up)}
+.rtag.attn{color:var(--warn-text);border-color:var(--warn)}
+.rtag.exr{color:var(--ink2);border-color:var(--axis)}
 @media (max-width:640px){.wrap{padding:24px 16px 40px}h1{font-size:24px}.top{align-items:flex-start;gap:18px}.top>div{min-width:0;max-width:100%}.controls{gap:8px}.treemap{height:380px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:14px}.kpi .val{font-size:21px}.status{text-align:left}.panel{padding:18px 16px}.card{padding:18px}.head{align-items:flex-start}.scroll-hint{display:block;margin:8px 0;color:var(--muted);font-size:12px}.tabs{gap:8px}.viewtabs{gap:4px;padding:8px 0}.viewtabs button{padding:9px 10px}.report-meta{gap:8px 16px}.report-meta span{flex:1 1 140px}}
 </style>
 </head>
@@ -184,6 +192,20 @@ footer b{color:var(--ink)}
     <h2>個股成交值前 10 名</h2>
     <p class="detail">上市＋上櫃普通股，依當日成交值排序（一般交易，不含盤後定價、零股、鉅額）。這是成交排行，不是推薦名單。</p>
     <div class="scroll"><table id="top10"></table></div>
+  </section>
+
+  <section class="panel" id="riskPanel" hidden>
+    <div class="head">
+      <h2>風險標示</h2>
+      <div class="tabs" role="group" aria-label="風險類別" id="riskTabs">
+        <button type="button" data-risk="disposition" aria-pressed="true">處置股</button>
+        <button type="button" data-risk="attention" aria-pressed="false">注意股</button>
+        <button type="button" data-risk="exright" aria-pressed="false">兩週內除權息</button>
+      </div>
+    </div>
+    <p class="detail" id="riskNote"></p>
+    <p class="scroll-hint">表格可左右滑動 →</p>
+    <div class="scroll"><table id="riskTable"></table></div>
   </section>
   </div>
 
@@ -938,6 +960,101 @@ footer b{color:var(--ink)}
     names.forEach(function (n) { tr.appendChild(el('th', null, n)); });
     thead.appendChild(tr); table.appendChild(thead);
   }
+
+  // ---------- risk flags: official disposition, attention and ex-rights notices ----------
+  var RISK = D.risk_flags, RISK_BY = {}, riskKind = 'disposition';
+  var RISK_CLASSES = { disposition: 'dispo', attention: 'attn', exright: 'exr' };
+  var MARKET_KEYS = { '上市': 'listed', '上櫃': 'otc', listed: 'listed', otc: 'otc' };
+  if (RISK) RISK.stocks.forEach(function (r) { RISK_BY[r.market + ':' + r.symbol] = r; });
+  function riskTag(kind, r) {  // the generator's risk_tag_text() says the same
+    if (kind === 'disposition') return r.disposition.start > RISK.date ? '將處置' : '處置';
+    if (kind === 'attention') return '注意';
+    return r.exright.kind + ' ' + (r.exright.date === RISK.date ? '今日' : md(r.exright.date));
+  }
+  function cashText(x) { return x.cash == null ? '—' : parseFloat(x.cash.toFixed(4)) + ' 元'; }
+  function riskTip(kind, r) {
+    var title = r.name + '（' + r.symbol + '）', d = r.disposition, x = r.exright;
+    if (kind === 'disposition') return [title, ['處置期間', md(d.start) + '～' + md(d.end)], ['措施', d.measure || '—'], ['原因', d.reason || '—']];
+    if (kind === 'attention') return [title, ['注意原因', r.attention]];
+    return [title, ['除權息日', md(x.date) + (x.closed ? '（當天休市，實際日期以交易所公告為準）' : '')], ['類別', x.kind], ['現金股利', cashText(x)]];
+  }
+  function bindRiskTag(node) {
+    var r = RISK_BY[node.dataset.risk], kind = node.dataset.kind;
+    if (!r || !r[kind]) return;
+    var lines = riskTip(kind, r);
+    node.tabIndex = 0;
+    node.setAttribute('aria-label', node.textContent + '：' + lines.slice(1).map(function (l) { return l[0] + ' ' + l[1]; }).join('，'));
+    bindTip(node, lines);
+  }
+  function riskTags(box, market, symbol) {
+    var key = MARKET_KEYS[market] + ':' + symbol, r = RISK_BY[key];
+    if (!r) return;
+    Object.keys(RISK_CLASSES).forEach(function (kind) {
+      if (!r[kind]) return;
+      var tag = el('span', 'rtag ' + RISK_CLASSES[kind], riskTag(kind, r));
+      tag.dataset.risk = key; tag.dataset.kind = kind;
+      bindRiskTag(tag);
+      box.appendChild(tag);
+    });
+  }
+  var RISK_TABS = {
+    disposition: { label: '處置股', head: ['股票', '處置期間', '措施', '原因'],
+      order: function (a, b) { return a.disposition.end < b.disposition.end ? 1 : a.disposition.end > b.disposition.end ? -1 : 0; },
+      cells: function (tr, r) {
+        var d = r.disposition;
+        cell(tr, md(d.start) + '～' + md(d.end), d.start > RISK.date ? 'flag' : null, d.start > RISK.date ? '下一個交易日起' : null);
+        cell(tr, d.measure || '—'); cell(tr, d.reason || '—', 'wide');
+      },
+      note: function () {
+        return '處置＝交易所因連續異常交易而限制撮合：改成人工管制、每隔幾分鐘才撮合一次，部分還要先收足款券，買賣比較不順。'
+          + '列出 ' + RISK.date + ' 當天在處置期間，或已公告、下一個交易日起處置的股票（標「將處置」）。'
+          + '期間照交易所公告；遇颱風等臨時休市會順延，以交易所最新公告為準。';
+      } },
+    attention: { label: '注意股', head: ['股票', '注意原因（交易所公布）'],
+      order: function () { return 0; },
+      cells: function (tr, r) { cell(tr, r.attention, 'wide'); },
+      note: function () {
+        return '注意＝交易所當天公布的「注意交易資訊」：漲跌幅、成交量、週轉率或本益比等明顯異常。注意不是處置，但連續或累計多次被注意就可能被處置。';
+      } },
+    exright: { label: '兩週內除權息', head: ['股票', '除權息日', '類別', '現金股利'],
+      order: function (a, b) { return a.exright.date < b.exright.date ? -1 : a.exright.date > b.exright.date ? 1 : 0; },
+      cells: function (tr, r) {
+        var x = r.exright;
+        cell(tr, x.date === RISK.date ? md(x.date) + '（今日）' : md(x.date), x.closed ? 'flag' : null, x.closed ? '當天休市，以交易所公告為準' : null);
+        cell(tr, x.kind); cell(tr, cashText(x));
+      },
+      note: function () {
+        return '除權息當天，參考價會先扣掉股利或配股；本頁的 K 線與 5／20 日漲跌都未還原，看起來會像下跌。'
+          + '列出 ' + RISK.date + '～' + RISK.exright_until + ' 的除權息日（取自交易所已公布的預告表與計算結果表）；現金股利以發行公司公告為準，「—」＝尚未公告或只有配股。';
+      } }
+  };
+  function riskRows(kind) { return RISK.stocks.filter(function (r) { return r[kind]; }).sort(RISK_TABS[kind].order); }
+  function renderRisk() {
+    if (!RISK) return;
+    document.getElementById('riskPanel').hidden = false;
+    document.querySelectorAll('#riskTabs button').forEach(function (b) {
+      b.textContent = RISK_TABS[b.dataset.risk].label + ' ' + riskRows(b.dataset.risk).length;
+    });
+    var spec = RISK_TABS[riskKind], rows = riskRows(riskKind);
+    document.getElementById('riskNote').textContent = spec.note()
+      + '資料是證交所與櫃買中心的官方公告，只列普通股；同樣的標籤也會出現在本頁各名單的股名旁。'
+      + (RISK.fetched_at ? '抓取時間 ' + RISK.fetched_at.slice(0, 16).replace('T', ' ') + '。' : '')
+      + (RISK.missing.length ? '尚未取得：' + RISK.missing.join('、') + '，這部分沒有標籤。' : '')
+      + '這是提醒，不是買賣建議，也不影響系統分數。';
+    var table = document.getElementById('riskTable');
+    table.textContent = '';
+    if (!rows.length) { table.appendChild(el('caption', 'gap', '這一天沒有符合的普通股。')); return; }
+    header(table, spec.head);
+    var body = el('tbody');
+    rows.forEach(function (r) {
+      var tr = el('tr'), first = cell(tr, '', null);
+      first.appendChild(el('span', 'name', r.name));
+      first.appendChild(el('small', null, r.symbol + '｜' + MARKET_NAMES[r.market] + '｜' + r.industry));
+      spec.cells(tr, r);
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+  }
   function renderTop10() {
     var table = document.getElementById('top10');
     header(table, ['排名／股票', '收盤', '漲跌', '成交值（億）', '外資（張）', '投信（張）', '自營商（張）', '三大合計（張）', '近 5 日（張）', '近 20 日（張）']);
@@ -946,6 +1063,7 @@ footer b{color:var(--ink)}
       var tr = el('tr');
       var first = cell(tr, r.rank + '　', null);
       first.appendChild(el('span', 'name', r.name));
+      riskTags(first, r.market, r.symbol);
       first.appendChild(el('small', null, r.symbol + '｜' + r.market + '｜' + r.industry));
       cell(tr, num(r.close, r.close < 100 ? 2 : 1));
       cell(tr, pct(r.change_pct), dir(r.change_pct));
@@ -1015,6 +1133,7 @@ footer b{color:var(--ink)}
       var tr = el('tr');
       var first = cell(tr, '', null);
       first.appendChild(el('span', 'name', r.name));
+      riskTags(first, r.market, r.symbol);
       first.appendChild(el('small', null, r.symbol + '｜' + MARKET_NAMES[r.market] + '｜' + r.industry));
       cell(tr, '').appendChild(flowStrip(r.daily_lots, FLOW.dates));
       cell(tr, String(r.listed_days));
@@ -1110,6 +1229,7 @@ footer b{color:var(--ink)}
     rows.forEach(function (r) {
       var tr = el('tr'), first = cell(tr, '', null);
       first.appendChild(el('span', 'name', r.name));
+      riskTags(first, r.market, r.symbol);
       first.appendChild(el('small', null, r.symbol + '｜' + MARKET_NAMES[r.market] + '｜' + r.industry));
       cell(tr, num(r.margin_lots));
       cell(tr, lotsText(r.margin_change_lots).replace(' 張', ''), dir(r.margin_change_lots), r.margin_change_pct == null ? null : pct(r.margin_change_pct));
@@ -1179,6 +1299,7 @@ footer b{color:var(--ink)}
       var card = el('article', 'card');
       var top = el('div', 'card-top');
       var name = el('div', 'card-name', c.rank + '　' + c.name);
+      riskTags(name, c.market, c.symbol);
       name.appendChild(el('small', null, c.symbol + '｜' + c.market + '｜' + (c.industry || '—')));
       top.appendChild(name);
       var price = el('div', 'card-price');
@@ -1269,6 +1390,8 @@ footer b{color:var(--ink)}
       + RETAIL.dates[0] + '～' + RETAIL.dates[RETAIL.dates.length - 1] + '）。融資、融券以「張」呈現，融資餘額金額為官方融資金額；交易所在 T+2 前會修正當沖數字，之前顯示的是初值。']);
     if (FUT) lines.splice(lines.length - 1, 0, ['期貨：', '期交所「三大法人－區分各期貨契約」「期貨每日交易行情」（小型臺指、微型臺指）與「臺指選擇權 Put/Call 比」（'
       + FUT.dates[0] + '～' + FUT.dates[FUT.dates.length - 1] + '），單位為口；散戶多空比是用上述官方資料計算，不是期交所公布的數字。']);
+    if (RISK) lines.splice(lines.length - 1, 0, ['風險標示：', '證交所「公布注意有價證券資訊」「公布處置有價證券資訊」「除權除息預告表」「除權除息計算結果表」，'
+      + '櫃買中心「上櫃公布注意有價證券」「上櫃處置有價證券」「除權除息預告表」「除權除息計算結果表」（資料日 ' + RISK.date + '）。只列普通股；處置期間與除權息日以交易所最新公告為準。']);
     (D.notes || []).forEach(function (n) { lines.push(['注意：', n]); });
     lines.forEach(function (pair) {
       var p = el('div'); p.appendChild(el('b', null, pair[0])); p.appendChild(document.createTextNode(pair[1])); f.appendChild(p);
@@ -1327,6 +1450,10 @@ footer b{color:var(--ink)}
     var b = e.target.closest('button'); if (!b) return;
     retailList = b.dataset.list; pressGroup('retailTabs', 'list', retailList); renderRetailList();
   });
+  document.getElementById('riskTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    riskKind = b.dataset.risk; pressGroup('riskTabs', 'risk', riskKind); renderRisk();
+  });
   // One view at a time; the link keeps it (#industry). A view whose panels all stayed hidden gets no button.
   var VIEWS = ['overview', 'research', 'industry', 'institution', 'retail'];
   function viewHasContent(name) {
@@ -1367,6 +1494,11 @@ footer b{color:var(--ink)}
   renderHeader(); renderKpis(); renderSummary(); renderBreadth(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
   renderHeat(); renderTop10(); renderIndustries(); renderListedInst(); renderInstHistory(); renderInstBars(); renderFlow();
   renderFutures(); renderRetail(); renderRetailList(); renderFooter();
+  if (RISK) {  // open on the first kind that has stocks; the discovery tables' tags come from the generator
+    riskKind = Object.keys(RISK_TABS).filter(function (k) { return riskRows(k).length; })[0] || 'disposition';
+    pressGroup('riskTabs', 'risk', riskKind); renderRisk();
+    document.querySelectorAll('.discovery-table .rtag').forEach(bindRiskTag);
+  }
   VIEWS.forEach(function (v) { document.querySelector('#viewTabs [data-view="' + v + '"]').hidden = !viewHasContent(v); });
   showView(location.hash.slice(1), false);
 })();
