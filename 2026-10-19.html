@@ -114,7 +114,7 @@ footer b{color:var(--ink)}
 /* Long-press on a chart shows its tooltip instead of selecting the page text. */
 .chart,.treemap,.bars,.flow{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* Time-series charts: slide a finger sideways to read each day; vertical swipes still scroll. */
-#breadthChart svg,#instHistory svg,.kline svg{touch-action:pan-y pinch-zoom}
+#breadthChart svg,#instHistory svg,#retailChart svg,#futuresChart svg,.kline svg{touch-action:pan-y pinch-zoom}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink2);margin:0 0 10px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{display:inline-block;width:16px;border-top:2px solid var(--accent)}
@@ -282,6 +282,13 @@ footer b{color:var(--ink)}
     <p class="detail">三大法人合計淨股數 × 當日收盤價，單位：億元。這是估算，不是法人實際成交金額；紅＝買超、綠＝賣超。</p>
     <div class="bars" id="instBars"></div>
     <p class="gap" id="gapNote"></p>
+  </section>
+
+  <section class="panel" id="futuresPanel" hidden>
+    <h2>期貨籌碼</h2>
+    <p class="detail" id="futuresNote"></p>
+    <div class="legend" id="futuresLegend"></div>
+    <div class="chart" id="futuresChart"></div>
   </section>
 
   <section class="panel" id="flowPanel" hidden>
@@ -658,8 +665,9 @@ footer b{color:var(--ink)}
   var HIST = D.history;
   function md(day) { return day.slice(5).replace('-', '/'); }
   function niceDomain(values, o) {
-    var lo = o.min != null ? o.min : Math.min.apply(null, values.concat(o.zero ? [0] : []));
-    var hi = o.max != null ? o.max : Math.max.apply(null, values.concat(o.zero ? [0] : []));
+    var fixed = (o.zero ? [0] : []).concat(o.refs || []);  // keep the zero line and reference lines on the chart
+    var lo = o.min != null ? o.min : Math.min.apply(null, values.concat(fixed));
+    var hi = o.max != null ? o.max : Math.max.apply(null, values.concat(fixed));
     if (!values.length) { lo = o.min != null ? o.min : 0; hi = o.max != null ? o.max : 1; }
     if (hi - lo < 1e-9) { hi += 1; lo -= 1; }
     var step = niceStep((hi - lo) * 2);
@@ -1024,6 +1032,32 @@ footer b{color:var(--ink)}
     table.appendChild(body);
   }
 
+  // ---------- futures positioning ----------
+  var FUT = D.futures;
+  function renderFutures() {
+    if (!FUT) return;
+    document.getElementById('futuresPanel').hidden = false;
+    document.getElementById('futuresNote').textContent = '期交所盤後公布的期貨籌碼，單位：口（契約數）。'
+      + '外資台指期淨未平倉＝外資及陸資在臺股期貨的多方減空方未平倉，負數＝淨空單；外資也常用期貨替手上的現股避險，不能單獨解讀成看空。'
+      + '散戶多空比期交所沒有公布，這裡用常見算法：−（三大法人在該商品的未平倉淨額）÷ 該商品所有月份的未平倉量，正數＝散戶淨偏多，小台與微台分開算。'
+      + 'Put/Call 未平倉比＝臺指選擇權賣權未平倉量 ÷ 買權未平倉量，虛線是 100%。這些是籌碼描述，不是買賣建議，也不影響系統分數。';
+    legend(document.getElementById('futuresLegend'), [['外資淨未平倉', '', cssVar('--accent')], ['每日增減', 'box', cssVar('--up')],
+      ['散戶多空比：小台', '', cssVar('--ink')], ['散戶多空比：微台', 'dash', null]]);
+    var contracts = function (v) { return signed(v, 0, ' 口'); };
+    var share = function (v) { return signed(v, 2, '%'); };
+    drawTimePanels(document.getElementById('futuresChart'), FUT.dates, [
+      { title: '外資台指期淨未平倉（口）', height: 100, tick: function (v) { return num(v); }, series: [
+        { label: '外資淨未平倉', values: FUT.foreign_tx_net_oi, color: cssVar('--accent'), fmt: contracts, cls: dir }] },
+      { title: '外資淨未平倉每日增減（口）', height: 60, zero: true, tick: function (v) { return num(v); }, series: [
+        { type: 'bars', label: '增減', values: FUT.foreign_tx_change, color: function (v) { return kindColor('money', v); }, fmt: contracts, cls: dir }] },
+      { title: '散戶多空比（%）', height: 90, zero: true, tick: function (v) { return v + '%'; }, series: [
+        { label: '小台', values: FUT.retail_mtx_pct, color: cssVar('--ink'), fmt: share, cls: dir },
+        { label: '微台', values: FUT.retail_tmf_pct, color: cssVar('--ink2'), dash: '5 4', fmt: share, cls: dir }] },
+      { title: 'Put/Call 未平倉比（%）', height: 80, refs: [100], tick: function (v) { return v + '%'; }, series: [
+        { label: 'Put/Call', values: FUT.put_call_oi_pct, color: cssVar('--accent'), fmt: function (v) { return v.toFixed(2) + '%'; } }] }
+    ], '外資台指期淨未平倉、散戶多空比與 Put/Call 未平倉比，' + FUT.dates[0] + ' 至 ' + FUT.dates[FUT.dates.length - 1]);
+  }
+
   // ---------- margin and day trading ----------
   var RETAIL = D.retail, retailList = 'margin_up';
   var RETAIL_LISTS = {
@@ -1233,6 +1267,8 @@ footer b{color:var(--ink)}
     ];
     if (RETAIL) lines.splice(3, 0, ['融資與當沖：', '證交所「融資融券彙總」「當日沖銷交易標的及成交量值」、櫃買中心「上櫃股票融資融券餘額」「現股當沖交易統計資訊」（'
       + RETAIL.dates[0] + '～' + RETAIL.dates[RETAIL.dates.length - 1] + '）。融資、融券以「張」呈現，融資餘額金額為官方融資金額；交易所在 T+2 前會修正當沖數字，之前顯示的是初值。']);
+    if (FUT) lines.splice(lines.length - 1, 0, ['期貨：', '期交所「三大法人－區分各期貨契約」「期貨每日交易行情」（小型臺指、微型臺指）與「臺指選擇權 Put/Call 比」（'
+      + FUT.dates[0] + '～' + FUT.dates[FUT.dates.length - 1] + '），單位為口；散戶多空比是用上述官方資料計算，不是期交所公布的數字。']);
     (D.notes || []).forEach(function (n) { lines.push(['注意：', n]); });
     lines.forEach(function (pair) {
       var p = el('div'); p.appendChild(el('b', null, pair[0])); p.appendChild(document.createTextNode(pair[1])); f.appendChild(p);
@@ -1319,7 +1355,7 @@ footer b{color:var(--ink)}
     renderCharts(); renderScale();
   });
   function renderCharts() {
-    renderTreemap(); renderBars(); renderInstBars(); renderBreadth(); renderHeat(); renderInstHistory(); renderRetail(); renderKlines();
+    renderTreemap(); renderBars(); renderInstBars(); renderBreadth(); renderHeat(); renderInstHistory(); renderFutures(); renderRetail(); renderKlines();
   }
   var resizeTimer;
   window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderCharts, 150); });
@@ -1330,7 +1366,7 @@ footer b{color:var(--ink)}
 
   renderHeader(); renderKpis(); renderSummary(); renderBreadth(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
   renderHeat(); renderTop10(); renderIndustries(); renderListedInst(); renderInstHistory(); renderInstBars(); renderFlow();
-  renderRetail(); renderRetailList(); renderFooter();
+  renderFutures(); renderRetail(); renderRetailList(); renderFooter();
   VIEWS.forEach(function (v) { document.querySelector('#viewTabs [data-view="' + v + '"]').hidden = !viewHasContent(v); });
   showView(location.hash.slice(1), false);
 })();
