@@ -799,23 +799,38 @@ footer b{color:var(--ink)}
   function renderBreadth() {
     if (!HIST) return;
     var b = HIST.breadth, ma60 = b.above_ma60_pct.filter(function (v) { return v != null; }).length;
+    var adStart = b.ad_line ? HIST.dates[b.ad_line.findIndex(function (v) { return v != null; })] : null;
     document.getElementById('breadthPanel').hidden = false;
     document.getElementById('breadthNote').textContent = '上市＋上櫃普通股。站上均線＝收盤價高於近 20／60 日收盤平均；新高／新低＝當日最高／最低超過前 60 個交易日。'
+      + (adStart ? '上漲／下跌家數依官方漲跌（平盤與漲跌未核對的不計）；騰落線＝從 ' + adStart + ' 起每天「上漲家數−下跌家數」的累計，'
+        + '看的是多數股票的方向：指數上漲但騰落線往下，代表是少數權值股撐住指數。' : '')
       + '收盤價未還原除權息。共 ' + HIST.dates.length + ' 個交易日（' + HIST.dates[0] + '～' + HIST.dates[HIST.dates.length - 1] + '）'
       + (ma60 < HIST.dates.length ? '；60 日指標需要滿 60 個交易日的已核對資料，目前只有最近 ' + ma60 + ' 天，前段留白。' : '。');
     legend(document.getElementById('breadthLegend'), [['站上 20 日線', '', cssVar('--accent')], ['站上 60 日線', 'dash', null],
-      ['創 60 日新高', 'box', cssVar('--up')], ['創 60 日新低', 'box', cssVar('--down')], ['加權指數', '', cssVar('--ink')]]);
+      [adStart ? '新高／上漲' : '創 60 日新高', 'box', cssVar('--up')], [adStart ? '新低／下跌' : '創 60 日新低', 'box', cssVar('--down')]]
+      .concat(adStart ? [['騰落線', '', cssVar('--accent')]] : [])
+      .concat([['加權指數', '', cssVar('--ink')]]));
     var count = function (v) { return Math.abs(v).toLocaleString('zh-TW') + ' 檔'; };
-    drawTimePanels(document.getElementById('breadthChart'), HIST.dates, [
+    var negate = function (values) { return values.map(function (v) { return v == null ? null : -v; }); };
+    var panels = [
       { title: '站上均線比例（%）', height: 130, min: 0, max: 100, refs: [50], tick: function (v) { return v + '%'; }, series: [
         { label: '站上 20 日線', values: b.above_ma20_pct, color: cssVar('--accent'), fmt: function (v) { return v.toFixed(1) + '%'; } },
         { label: '站上 60 日線', values: b.above_ma60_pct, color: cssVar('--ink2'), dash: '5 4', fmt: function (v) { return v.toFixed(1) + '%'; } }] },
       { title: '創 60 日新高／新低（檔）', height: 80, zero: true, tick: function (v) { return Math.abs(v).toLocaleString('zh-TW'); }, series: [
         { type: 'bars', label: '新高', values: b.new_high_60, color: function () { return cssVar('--up'); }, fmt: count, cls: function () { return 'up'; } },
-        { type: 'bars', label: '新低', values: b.new_low_60.map(function (v) { return v == null ? null : -v; }), color: function () { return cssVar('--down'); }, fmt: count, cls: function () { return 'down'; } }] },
+        { type: 'bars', label: '新低', values: negate(b.new_low_60), color: function () { return cssVar('--down'); }, fmt: count, cls: function () { return 'down'; } }] }
+    ];
+    if (adStart) panels.push(
+      { title: '上漲／下跌家數（檔）', height: 80, zero: true, tick: function (v) { return Math.abs(v).toLocaleString('zh-TW'); }, series: [
+        { type: 'bars', label: '上漲', values: b.advancers, color: function () { return cssVar('--up'); }, fmt: count, cls: function () { return 'up'; } },
+        { type: 'bars', label: '下跌', values: negate(b.decliners), color: function () { return cssVar('--down'); }, fmt: count, cls: function () { return 'down'; } }] },
+      { title: '騰落線（上漲減下跌家數累計）', height: 90, tick: function (v) { return num(v); }, series: [
+        { label: '騰落線', values: b.ad_line, color: cssVar('--accent'), fmt: function (v) { return signed(v, 0, ' 檔'); }, cls: dir }] });
+    panels.push(
       { title: '加權指數', height: 90, tick: function (v) { return num(v); }, series: [
-        { label: '加權指數', values: HIST.taiex, color: cssVar('--ink'), fmt: function (v) { return num(v, 2); } }] }
-    ], '市場寬度：站上均線比例、60 日新高新低家數與加權指數，' + HIST.dates[0] + ' 至 ' + HIST.dates[HIST.dates.length - 1]);
+        { label: '加權指數', values: HIST.taiex, color: cssVar('--ink'), fmt: function (v) { return num(v, 2); } }] });
+    drawTimePanels(document.getElementById('breadthChart'), HIST.dates, panels,
+      '市場寬度：站上均線比例、60 日新高新低家數' + (adStart ? '、漲跌家數、騰落線' : '') + '與加權指數，' + HIST.dates[0] + ' 至 ' + HIST.dates[HIST.dates.length - 1]);
   }
 
   var instField = 'total';
