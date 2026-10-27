@@ -138,6 +138,14 @@ footer b{color:var(--ink)}
 .rtag.dispo{color:var(--up-text);border-color:var(--up)}
 .rtag.attn{color:var(--warn-text);border-color:var(--warn)}
 .rtag.exr{color:var(--ink2);border-color:var(--axis)}
+.trade-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));gap:10px 12px;align-items:end;margin:12px 0}
+.trade-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2);min-width:0}
+.trade-form .wide{grid-column:span 2}
+.trade-form button{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.trade-form input,.trade-form select{width:100%}
+td .del{min-height:32px;padding:4px 10px;font-size:12px}
+.card .pnl{font-size:13px;margin:4px 0}
+@media (max-width:640px){.trade-form .wide{grid-column:auto}}
 @media (max-width:640px){.wrap{padding:24px 16px 40px}h1{font-size:24px}.top{align-items:flex-start;gap:18px}.top>div{min-width:0;max-width:100%}.controls{gap:8px}.treemap{height:380px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{padding:14px}.kpi .val{font-size:21px}.status{text-align:left}.panel{padding:18px 16px}.card{padding:18px}.head{align-items:flex-start}.scroll-hint{display:block;margin:8px 0;color:var(--muted);font-size:12px}.tabs{gap:8px}.viewtabs{gap:4px;padding:8px 0}.viewtabs button{padding:9px 10px}.report-meta{gap:8px 16px}.report-meta span{flex:1 1 140px}}
 </style>
 </head>
@@ -169,6 +177,7 @@ footer b{color:var(--ink)}
     <button type="button" data-view="industry" aria-pressed="false">產業</button>
     <button type="button" data-view="institution" aria-pressed="false">法人籌碼</button>
     <button type="button" data-view="retail" aria-pressed="false">融資當沖</button>
+    <button type="button" data-view="tracking" aria-pressed="false">個股追蹤</button>
   </nav>
 
   <div class="view" id="view-overview">
@@ -355,10 +364,36 @@ footer b{color:var(--ink)}
   </section>
   </div>
 
+  <div class="view" id="view-tracking">
+  <section class="panel" id="trackingPanel" hidden>
+    <h2>個股追蹤</h2>
+    <p class="detail" id="trackingNote"></p>
+    <form class="trade-form" id="tradeForm" autocomplete="off" hidden>
+      <label>日期<input type="date" name="date" required></label>
+      <label>代號<input name="symbol" maxlength="6" required placeholder="例如 2330"></label>
+      <label>買賣<select name="side"><option value="buy">買進</option><option value="sell">賣出</option></select></label>
+      <label>股數<input name="shares" type="number" min="1" step="1" inputmode="numeric" required placeholder="1000"></label>
+      <label>成交價<input name="price" type="number" min="0" step="any" inputmode="decimal" required></label>
+      <label>費用（元，可空）<input name="fee" type="number" min="0" step="any" inputmode="decimal" placeholder="手續費＋稅"></label>
+      <label>類型<select name="mode"><option value="">未指定</option><option value="swing">波段</option><option value="intraday">當沖</option><option value="long_term">長期</option></select></label>
+      <label class="wide">備註（可空）<input name="note" maxlength="200" placeholder="理由、心得"></label>
+      <button type="submit">記一筆</button>
+    </form>
+    <p class="gap" id="tradeStatus" role="status" aria-live="polite"></p>
+    <div class="cards" id="trackingCards"></div>
+    <div class="head">
+      <h3 id="tradeTitle">交易紀錄</h3>
+      <button type="button" id="tradeFilterClear" hidden>顯示全部</button>
+    </div>
+    <p class="scroll-hint">表格可左右滑動 →</p>
+    <div class="scroll"><table id="tradeTable"></table></div>
+  </section>
+  </div>
+
   <footer id="footer"></footer>
 </main>
 <div class="tip" id="tip" role="tooltip" hidden></div>
-<script type="application/json" id="payload">{"archive": ["2026-10-22", "2026-10-21", "2026-10-20", "2026-10-19"], "breadth": {"down": 632, "flat": 199, "up": 1120}, "company_list_date": "2026-10-18", "date": "2026-10-21", "fetch_missing": {}, "gaps": [], "generated_at": "2026-10-21T23:34+08:00", "industries": [{"down": 59, "flat": 11, "group": "electronic", "institution_value_100m": -178.26, "institution_value_5d_100m": -1043.48, "marketcap_share_pct": 10.75, "n_stocks": 209, "name": "電子零組件", "return_1d_pct": 1.8, "return_20d_pct": 3.42, "return_5d_pct": -6.92, "turnover_100m": 3152.3, "turnover_share_avg20_pct": 25.83, "turnover_share_deviation_pp": 4.81, "turnover_share_pct": 30.65, "up": 139}, {"down": 22, "flat": 13, "group": "electronic", "institution_value_100m": -20.65, "institution_value_5d_100m": -3006.38, "marketcap_share_pct": 54.11, "n_stocks": 206, "name": "半導體業", "return_1d_pct": 1.09, "return_20d_pct": -3.33, "return_5d_pct": -4.1, "turnover_100m": 3151.4, "turnover_share_avg20_pct": 38.77, "turnover_share_deviation_pp": -8.13, "turnover_share_pct": 30.64, "up": 171}, {"down": 36, "flat": 7, "group": "electronic", "institution_value_100m": 50.64, "institution_value_5d_100m": 31.78, "marketcap_share_pct": 1.77, "n_stocks": 116, "name": "光電業", "return_1d_pct": 3.19, "return_20d_pct": 4.62, "return_5d_pct": -3.15, "turnover_100m": 823.7, "turnover_share_avg20_pct": 7.79, "turnover_share_deviation_pp": 0.22, "turnover_share_pct": 8.01, "up": 73}, {"down": 38, "flat": 8, "group": "electronic", "institution_value_100m": 34.81, "institution_value_5d_100m": 40.21, "marketcap_share_pct": 5.33, "n_stocks": 109, "name": "電腦及週邊設備", "return_1d_pct": 0.18, "return_20d_pct": -2.94, "return_5d_pct": -2.22, "turnover_100m": 743.0, "turnover_share_avg20_pct": 5.5, "turnover_share_deviation_pp": 1.72, "turnover_share_pct": 7.22, "up": 63}, {"down": 23, "flat": 7, "group": "electronic", "institution_value_100m": 31.8, "institution_value_5d_100m": -96.76, "marketcap_share_pct": 4.07, "n_stocks": 93, "name": "其他電子業", "return_1d_pct": 2.34, "return_20d_pct": -2.99, "return_5d_pct": -2.48, "turnover_100m": 510.4, "turnover_share_avg20_pct": 4.62, "turnover_share_deviation_pp": 0.34, "turnover_share_pct": 4.96, "up": 63}, {"down": 8, "flat": 3, "group": "other", "institution_value_100m": 94.46, "institution_value_5d_100m": -199.82, "marketcap_share_pct": 2.22, "n_stocks": 25, "name": "塑膠工業", "return_1d_pct": 6.5, "return_20d_pct": 27.23, "return_5d_pct": -9.21, "turnover_100m": 458.2, "turnover_share_avg20_pct": 3.23, "turnover_share_deviation_pp": 1.23, "turnover_share_pct": 4.45, "up": 14}, {"down": 20, "flat": 11, "group": "electronic", "institution_value_100m": -39.83, "institution_value_5d_100m": 10.65, "marketcap_share_pct": 2.76, "n_stocks": 91, "name": "通信網路業", "return_1d_pct": -1.04, "return_20d_pct": 0.24, "return_5d_pct": -2.83, "turnover_100m": 423.6, "turnover_share_avg20_pct": 4.23, "turnover_share_deviation_pp": -0.11, "turnover_share_pct": 4.12, "up": 60}, {"down": 3, "flat": 1, "group": "other", "institution_value_100m": 67.93, "institution_value_5d_100m": 198.34, "marketcap_share_pct": 8.4, "n_stocks": 40, "name": "金融保險", "return_1d_pct": 2.53, "return_20d_pct": 2.78, "return_5d_pct": 0.95, "turnover_100m": 222.1, "turnover_share_avg20_pct": 1.91, "turnover_share_deviation_pp": 0.25, "turnover_share_pct": 2.16, "up": 36}, {"down": 37, "flat": 11, "group": "other", "institution_value_100m": 14.7, "institution_value_5d_100m": 6.91, "marketcap_share_pct": 1.17, "n_stocks": 99, "name": "電機機械", "return_1d_pct": 1.89, "return_20d_pct": -2.23, "return_5d_pct": -3.8, "turnover_100m": 199.2, "turnover_share_avg20_pct": 1.8, "turnover_share_deviation_pp": 0.13, "turnover_share_pct": 1.94, "up": 51}, {"down": 3, "flat": 1, "group": "other", "institution_value_100m": -14.16, "institution_value_5d_100m": -18.55, "marketcap_share_pct": 0.13, "n_stocks": 5, "name": "玻璃陶瓷", "return_1d_pct": -0.25, "return_20d_pct": 13.34, "return_5d_pct": 0.42, "turnover_100m": 105.8, "turnover_share_avg20_pct": 0.46, "turnover_share_deviation_pp": 0.57, "turnover_share_pct": 1.03, "up": 1}, {"down": 7, "flat": 4, "group": "other", "institution_value_100m": 0.94, "institution_value_5d_100m": -4.63, "marketcap_share_pct": 0.4, "n_stocks": 42, "name": "化學工業", "return_1d_pct": 1.31, "return_20d_pct": 4.62, "return_5d_pct": -3.89, "turnover_100m": 83.4, "turnover_share_avg20_pct": 0.8, "turnover_share_deviation_pp": 0.01, "turnover_share_pct": 0.81, "up": 31}, {"down": 13, "flat": 2, "group": "other", "institution_value_100m": -1.24, "institution_value_5d_100m": 48.0, "marketcap_share_pct": 1.31, "n_stocks": 32, "name": "航運業", "return_1d_pct": -0.19, "return_20d_pct": 0.9, "return_5d_pct": -3.14, "turnover_100m": 72.6, "turnover_share_avg20_pct": 0.86, "turnover_share_deviation_pp": -0.15, "turnover_share_pct": 0.71, "up": 17}, {"down": 53, "flat": 25, "group": "other", "institution_value_100m": 7.28, "institution_value_5d_100m": 20.69, "marketcap_share_pct": 1.02, "n_stocks": 154, "name": "生技醫療", "return_1d_pct": 1.09, "return_20d_pct": -3.75, "return_5d_pct": -1.74, "turnover_100m": 48.9, "turnover_share_avg20_pct": 0.67, "turnover_share_deviation_pp": -0.2, "turnover_share_pct": 0.48, "up": 76}, {"down": 6, "flat": 1, "group": "other", "institution_value_100m": 12.67, "institution_value_5d_100m": 18.76, "marketcap_share_pct": 0.72, "n_stocks": 12, "name": "油電燃氣", "return_1d_pct": 2.46, "return_20d_pct": 22.68, "return_5d_pct": -7.79, "turnover_100m": 43.7, "turnover_share_avg20_pct": 0.41, "turnover_share_deviation_pp": 0.01, "turnover_share_pct": 0.43, "up": 5}, {"down": 31, "flat": 7, "group": "other", "institution_value_100m": 1.41, "institution_value_5d_100m": 12.76, "marketcap_share_pct": 0.59, "n_stocks": 91, "name": "其他", "return_1d_pct": 0.36, "return_20d_pct": -1.15, "return_5d_pct": -0.79, "turnover_100m": 39.9, "turnover_share_avg20_pct": 0.49, "turnover_share_deviation_pp": -0.1, "turnover_share_pct": 0.39, "up": 53}, {"down": 9, "flat": 1, "group": "electronic", "institution_value_100m": 9.24, "institution_value_5d_100m": 4.36, "marketcap_share_pct": 0.64, "n_stocks": 38, "name": "電子通路業", "return_1d_pct": 1.64, "return_20d_pct": 2.84, "return_5d_pct": -2.54, "turnover_100m": 37.7, "turnover_share_avg20_pct": 0.52, "turnover_share_deviation_pp": -0.15, "turnover_share_pct": 0.37, "up": 28}, {"down": 18, "flat": 8, "group": "other", "institution_value_100m": 2.89, "institution_value_5d_100m": 32.39, "marketcap_share_pct": 0.56, "n_stocks": 48, "name": "鋼鐵工業", "return_1d_pct": 0.32, "return_20d_pct": 4.81, "return_5d_pct": 0.62, "turnover_100m": 26.3, "turnover_share_avg20_pct": 0.26, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.26, "up": 22}, {"down": 10, "flat": 3, "group": "electronic", "institution_value_100m": 1.5, "institution_value_5d_100m": 6.65, "marketcap_share_pct": 0.15, "n_stocks": 45, "name": "資訊服務業", "return_1d_pct": 1.31, "return_20d_pct": 2.49, "return_5d_pct": 0.07, "turnover_100m": 17.7, "turnover_share_avg20_pct": 0.18, "turnover_share_deviation_pp": -0.01, "turnover_share_pct": 0.17, "up": 32}, {"down": 18, "flat": 9, "group": "other", "institution_value_100m": 0.03, "institution_value_5d_100m": 7.23, "marketcap_share_pct": 0.44, "n_stocks": 44, "name": "汽車工業", "return_1d_pct": -0.33, "return_20d_pct": -1.67, "return_5d_pct": -2.23, "turnover_100m": 14.1, "turnover_share_avg20_pct": 0.2, "turnover_share_deviation_pp": -0.06, "turnover_share_pct": 0.14, "up": 17}, {"down": 22, "flat": 5, "group": "other", "institution_value_100m": 0.15, "institution_value_5d_100m": 2.5, "marketcap_share_pct": 0.27, "n_stocks": 44, "name": "綠能環保", "return_1d_pct": 0.61, "return_20d_pct": -6.21, "return_5d_pct": -3.86, "turnover_100m": 14.1, "turnover_share_avg20_pct": 0.23, "turnover_share_deviation_pp": -0.09, "turnover_share_pct": 0.14, "up": 17}, {"down": 13, "flat": 3, "group": "other", "institution_value_100m": -0.84, "institution_value_5d_100m": 14.42, "marketcap_share_pct": 0.27, "n_stocks": 27, "name": "運動休閒", "return_1d_pct": -0.86, "return_20d_pct": -0.65, "return_5d_pct": -0.83, "turnover_100m": 11.9, "turnover_share_avg20_pct": 0.08, "turnover_share_deviation_pp": 0.04, "turnover_share_pct": 0.12, "up": 11}, {"down": 16, "flat": 6, "group": "other", "institution_value_100m": 1.99, "institution_value_5d_100m": 38.26, "marketcap_share_pct": 0.49, "n_stocks": 34, "name": "食品工業", "return_1d_pct": 0.03, "return_20d_pct": 1.01, "return_5d_pct": -0.61, "turnover_100m": 11.5, "turnover_share_avg20_pct": 0.12, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.11, "up": 12}, {"down": 18, "flat": 5, "group": "other", "institution_value_100m": 1.67, "institution_value_5d_100m": 4.16, "marketcap_share_pct": 0.17, "n_stocks": 39, "name": "數位雲端", "return_1d_pct": 1.04, "return_20d_pct": -1.23, "return_5d_pct": -0.35, "turnover_100m": 11.5, "turnover_share_avg20_pct": 0.09, "turnover_share_deviation_pp": 0.03, "turnover_share_pct": 0.11, "up": 16}, {"down": 1, "flat": 2, "group": "other", "institution_value_100m": 2.04, "institution_value_5d_100m": 10.27, "marketcap_share_pct": 0.23, "n_stocks": 7, "name": "水泥工業", "return_1d_pct": 0.17, "return_20d_pct": 7.81, "return_5d_pct": 0.12, "turnover_100m": 9.8, "turnover_share_avg20_pct": 0.14, "turnover_share_deviation_pp": -0.05, "turnover_share_pct": 0.1, "up": 4}, {"down": 41, "flat": 10, "group": "other", "institution_value_100m": -0.34, "institution_value_5d_100m": 10.24, "marketcap_share_pct": 0.57, "n_stocks": 85, "name": "建材營造", "return_1d_pct": -0.14, "return_20d_pct": -5.41, "return_5d_pct": -1.28, "turnover_100m": 10.6, "turnover_share_avg20_pct": 0.14, "turnover_share_deviation_pp": -0.04, "turnover_share_pct": 0.1, "up": 34}, {"down": 9, "flat": 4, "group": "other", "institution_value_100m": 1.56, "institution_value_5d_100m": 20.12, "marketcap_share_pct": 0.18, "n_stocks": 25, "name": "文化創意業", "return_1d_pct": -0.09, "return_20d_pct": 4.96, "return_5d_pct": -2.97, "turnover_100m": 9.8, "turnover_share_avg20_pct": 0.18, "turnover_share_deviation_pp": -0.08, "turnover_share_pct": 0.1, "up": 12}, {"down": 28, "flat": 8, "group": "other", "institution_value_100m": 0.34, "institution_value_5d_100m": 14.57, "marketcap_share_pct": 0.32, "n_stocks": 52, "name": "紡織纖維", "return_1d_pct": 0.04, "return_20d_pct": 4.11, "return_5d_pct": -2.09, "turnover_100m": 8.8, "turnover_share_avg20_pct": 0.14, "turnover_share_deviation_pp": -0.06, "turnover_share_pct": 0.09, "up": 16}, {"down": 6, "flat": 2, "group": "other", "institution_value_100m": 0.34, "institution_value_5d_100m": -16.16, "marketcap_share_pct": 0.18, "n_stocks": 17, "name": "電器電纜", "return_1d_pct": 0.73, "return_20d_pct": -0.13, "return_5d_pct": -6.6, "turnover_100m": 6.9, "turnover_share_avg20_pct": 0.15, "turnover_share_deviation_pp": -0.08, "turnover_share_pct": 0.07, "up": 9}, {"down": 16, "flat": 6, "group": "other", "institution_value_100m": 0.84, "institution_value_5d_100m": 7.13, "marketcap_share_pct": 0.19, "n_stocks": 34, "name": "居家生活", "return_1d_pct": 0.85, "return_20d_pct": -0.24, "return_5d_pct": 0.09, "turnover_100m": 5.4, "turnover_share_avg20_pct": 0.05, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.05, "up": 12}, {"down": 12, "flat": 1, "group": "other", "institution_value_100m": 0.85, "institution_value_5d_100m": 35.61, "marketcap_share_pct": 0.24, "n_stocks": 18, "name": "貿易百貨", "return_1d_pct": -0.77, "return_20d_pct": 1.45, "return_5d_pct": 0.85, "turnover_100m": 5.3, "turnover_share_avg20_pct": 0.06, "turnover_share_deviation_pp": -0.01, "turnover_share_pct": 0.05, "up": 5}, {"down": 7, "flat": 2, "group": "other", "institution_value_100m": -0.15, "institution_value_5d_100m": 7.56, "marketcap_share_pct": 0.13, "n_stocks": 11, "name": "橡膠工業", "return_1d_pct": -0.47, "return_20d_pct": 3.39, "return_5d_pct": -0.87, "turnover_100m": 3.3, "turnover_share_avg20_pct": 0.04, "turnover_share_deviation_pp": -0.01, "turnover_share_pct": 0.03, "up": 2}, {"down": 25, "flat": 8, "group": "other", "institution_value_100m": -0.06, "institution_value_5d_100m": 4.73, "marketcap_share_pct": 0.13, "n_stocks": 48, "name": "觀光餐旅", "return_1d_pct": -0.21, "return_20d_pct": 0.31, "return_5d_pct": -0.29, "turnover_100m": 2.1, "turnover_share_avg20_pct": 0.02, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.02, "up": 15}, {"down": 4, "flat": 2, "group": "other", "institution_value_100m": -0.23, "institution_value_5d_100m": 0.2, "marketcap_share_pct": 0.08, "n_stocks": 7, "name": "造紙工業", "return_1d_pct": -0.33, "return_20d_pct": -2.19, "return_5d_pct": -2.78, "turnover_100m": 1.0, "turnover_share_avg20_pct": 0.01, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.01, "up": 1}, {"down": 0, "flat": 2, "group": "other", "institution_value_100m": -0.0, "institution_value_5d_100m": -0.0, "marketcap_share_pct": 0.0, "n_stocks": 4, "name": "農業科技", "return_1d_pct": 0.34, "return_20d_pct": -0.22, "return_5d_pct": -1.2, "turnover_100m": 0.0, "turnover_share_avg20_pct": 0.0, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.0, "up": 2}], "institution_days": 21, "listed_institutions_100m": {"1d": {"dealer": -135.72, "foreign": 22.39, "total": 14.66, "trust": 127.99}, "20d": {"dealer": -2769.8, "foreign": -7009.47, "total": -8483.6, "trust": 1295.67}, "5d": {"dealer": -2146.52, "foreign": -5027.46, "total": -6229.03, "trust": 944.95}}, "notes": [], "ordinary_turnover_100m": 10286.0, "ordinary_turnover_by_market_100m": {"上市": 8142.0, "上櫃": 2144.0}, "public_candidates": {"evaluated_count": 1979, "items": [{"breakout_score": 61.25, "change_pct": 2.87, "close": 93.3, "final_score": 86.78, "industry": "鋼鐵工業", "institution_5d_lots": 2024, "institution_lots": 704, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "東和鋼鐵", "provisional": true, "rank": 1, "risks": ["RSI 偏熱（中）"], "setup_score": 80.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "收盤強勢（強）", "法人籌碼累積（強）"], "symbol": "2006", "tier": "B", "turnover_100m": 2.33}, {"breakout_score": 61.25, "change_pct": 4.47, "close": 74.8, "final_score": 83.78, "industry": "金融保險", "institution_5d_lots": 32710, "institution_lots": 13084, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "中信金", "provisional": true, "rank": 2, "risks": ["RSI 偏熱（中）"], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "收盤強勢（強）", "法人籌碼累積（強）"], "symbol": "2891", "tier": "B", "turnover_100m": 32.71}, {"breakout_score": 44.0, "change_pct": 0.0, "close": 105.0, "final_score": 82.98, "industry": "電腦及週邊設備", "institution_5d_lots": 22726, "institution_lots": 4944, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "和碩", "provisional": true, "rank": 3, "risks": ["離 20 日線過遠（弱）", "RSI 偏熱（中）", "盤中突破但收盤沒守住"], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破有量（強）", "法人籌碼累積（強）"], "symbol": "4938", "tier": "B", "turnover_100m": 32.03}, {"breakout_score": 75.0, "change_pct": 2.86, "close": 270.0, "final_score": 82.56, "industry": "生技醫療", "institution_5d_lots": 326, "institution_lots": 125, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "視陽", "provisional": true, "rank": 4, "risks": ["離 20 日線過遠（弱）", "5 日漲幅過大（弱）"], "setup_score": 78.0, "state": "初步突破", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（強）", "突破有量（強）", "收盤強勢（強）", "法人籌碼累積（中）"], "symbol": "6782", "tier": "B", "turnover_100m": 2.3}, {"breakout_score": 45.25, "change_pct": -0.31, "close": 32.3, "final_score": 82.5, "industry": "電腦及週邊設備", "institution_5d_lots": 23126, "institution_lots": 1049, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "宏碁", "provisional": true, "rank": 5, "risks": [], "setup_score": 75.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（中）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "法人籌碼累積（強）"], "symbol": "2353", "tier": "B", "turnover_100m": 6.27}, {"breakout_score": 46.75, "change_pct": 0.3, "close": 165.0, "final_score": 81.8, "industry": "電腦及週邊設備", "institution_5d_lots": 16196, "institution_lots": 167, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "微星", "provisional": true, "rank": 6, "risks": ["RSI 過熱（80 以上）"], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "法人籌碼累積（中）"], "symbol": "2377", "tier": "B", "turnover_100m": 13.54}, {"breakout_score": 75.0, "change_pct": 9.98, "close": 220.5, "final_score": 80.2, "industry": "半導體業", "institution_5d_lots": 55, "institution_lots": 79, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "暉盛-創", "provisional": true, "rank": 7, "risks": ["漲停追價（強）", "離 20 日線過遠（中）"], "setup_score": 78.0, "state": "初步突破", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（強）", "突破有量（強）", "收盤強勢（強）", "法人籌碼累積（中）"], "symbol": "7730", "tier": "B", "turnover_100m": 0.79}, {"breakout_score": 61.25, "change_pct": 3.53, "close": 49.8, "final_score": 79.5, "industry": "金融保險", "institution_5d_lots": 9064, "institution_lots": 5293, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "華南金", "provisional": true, "rank": 8, "risks": [], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "收盤強勢（強）"], "symbol": "2880", "tier": "B", "turnover_100m": 8.04}, {"breakout_score": 48.75, "change_pct": 3.87, "close": 590.0, "final_score": 79.5, "industry": "半導體業", "institution_5d_lots": 6847, "institution_lots": 2205, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "聯詠", "provisional": true, "rank": 9, "risks": ["盤中突破但收盤沒守住"], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破有量（中）", "收盤強勢（中）"], "symbol": "3034", "tier": "B", "turnover_100m": 27.96}, {"breakout_score": 53.0, "change_pct": 3.17, "close": 195.0, "final_score": 79.5, "industry": "電腦及週邊設備", "institution_5d_lots": 29921, "institution_lots": 23988, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "緯創", "provisional": true, "rank": 10, "risks": [], "setup_score": 72.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（強）", "法人籌碼累積（強）"], "symbol": "3231", "tier": "B", "turnover_100m": 157.06}]}, "stock_count": 1951, "summary": ["上市三大法人合計 +14.66 億（外資 +22.39、投信 +127.99、自營商 −135.72）；近 5 日合計 −6,229 億。", "成交最集中：電子零組件 30.6%＋半導體業 30.6%，合計 61.3%。", "比近 20 日平常更熱：電子零組件（+4.8 個百分點）、電腦及週邊設備（+1.7 個百分點）；更冷：半導體業（−8.1 個百分點）、生技醫療（−0.2 個百分點）。", "今日最強：塑膠工業 +6.5%；最弱：通信網路業 −1.0%（只比成交占比 0.5% 以上的產業）。", "近 5 日最強：金融保險 +0.9%；最弱：塑膠工業 −9.2%（只比成交占比 0.5% 以上的產業）。", "近 20 日最強：塑膠工業 +27.2%；最弱：半導體業 −3.3%（只比成交占比 0.5% 以上的產業）。", "法人估算買超最多：塑膠工業 +94.5 億；賣超最多：電子零組件 −178.3 億（上市櫃合計，淨股數×收盤價估算）。", "普通股上漲 1120 檔、下跌 632 檔、平盤或未成交 199 檔。"], "taiex": {"change_pct": 1.28, "change_points": 594.84, "close": 46887.77}, "top10": [{"change_pct": 0.62, "close": 2420.0, "dealer_lots": -1048, "foreign_lots": -6154, "industry": "半導體業", "institution_20d_lots": -101363, "institution_5d_lots": -64603, "institution_lots": -5804, "institution_value_100m": -140.46, "market": "上市", "name": "台積電", "rank": 1, "symbol": "2330", "trust_lots": 1398, "turnover_100m": 655.2}, {"change_pct": 8.28, "close": 320.5, "dealer_lots": 2174, "foreign_lots": 24165, "industry": "塑膠工業", "institution_20d_lots": 32703, "institution_5d_lots": -33914, "institution_lots": 26525, "institution_value_100m": 85.01, "market": "上市", "name": "南亞", "rank": 2, "symbol": "1303", "trust_lots": 186, "turnover_100m": 393.4}, {"change_pct": -0.24, "close": 4140.0, "dealer_lots": -652, "foreign_lots": -1162, "industry": "半導體業", "institution_20d_lots": -29749, "institution_5d_lots": -11729, "institution_lots": -1646, "institution_value_100m": -68.14, "market": "上市", "name": "聯發科", "rank": 3, "symbol": "2454", "trust_lots": 167, "turnover_100m": 391.0}, {"change_pct": -3.23, "close": 1500.0, "dealer_lots": 113, "foreign_lots": -3857, "industry": "電子零組件", "institution_20d_lots": -4769, "institution_5d_lots": -5063, "institution_lots": -4282, "institution_value_100m": -64.23, "market": "上櫃", "name": "台燿", "rank": 4, "symbol": "6274", "trust_lots": -538, "turnover_100m": 321.1}, {"change_pct": 6.88, "close": 1010.0, "dealer_lots": -203, "foreign_lots": 120, "industry": "半導體業", "institution_20d_lots": 28169, "institution_5d_lots": -4231, "institution_lots": 174, "institution_value_100m": 1.76, "market": "上市", "name": "景碩", "rank": 5, "symbol": "3189", "trust_lots": 258, "turnover_100m": 216.6}, {"change_pct": 4.27, "close": 1100.0, "dealer_lots": 51, "foreign_lots": -1687, "industry": "電子零組件", "institution_20d_lots": 15501, "institution_5d_lots": -11866, "institution_lots": -666, "institution_value_100m": -7.33, "market": "上市", "name": "欣興", "rank": 6, "symbol": "3037", "trust_lots": 970, "turnover_100m": 212.0}, {"change_pct": -4.55, "close": 147.0, "dealer_lots": 221, "foreign_lots": -21516, "industry": "電子零組件", "institution_20d_lots": 2700, "institution_5d_lots": 25337, "institution_lots": -21149, "institution_value_100m": -31.09, "market": "上櫃", "name": "富喬", "rank": 7, "symbol": "1815", "trust_lots": 146, "turnover_100m": 210.2}, {"change_pct": 5.67, "close": 578.0, "dealer_lots": 425, "foreign_lots": 1279, "industry": "電子零組件", "institution_20d_lots": 26538, "institution_5d_lots": -4180, "institution_lots": 2423, "institution_value_100m": 14.01, "market": "上市", "name": "臻鼎-KY", "rank": 8, "symbol": "4958", "trust_lots": 719, "turnover_100m": 199.2}, {"change_pct": 1.25, "close": 1625.0, "dealer_lots": -155, "foreign_lots": -2535, "industry": "電子零組件", "institution_20d_lots": -19738, "institution_5d_lots": -18592, "institution_lots": -2336, "institution_value_100m": -37.96, "market": "上市", "name": "台達電", "rank": 9, "symbol": "2308", "trust_lots": 354, "turnover_100m": 187.1}, {"change_pct": 3.63, "close": 542.0, "dealer_lots": 450, "foreign_lots": 4187, "industry": "電子零組件", "institution_20d_lots": -38695, "institution_5d_lots": -38023, "institution_lots": 4970, "institution_value_100m": 26.94, "market": "上市", "name": "國巨*", "rank": 10, "symbol": "2327", "trust_lots": 334, "turnover_100m": 186.5}], "tpex_index": {"change_pct": 1.94, "change_points": 7.54, "close": 395.42}, "window_days": ["2026-09-18", "2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-19", "2026-10-20", "2026-10-21"]}</script>
+<script type="application/json" id="payload">{"archive": ["2026-10-27", "2026-10-22", "2026-10-21", "2026-10-20", "2026-10-19"], "breadth": {"down": 632, "flat": 199, "up": 1120}, "company_list_date": "2026-10-18", "date": "2026-10-21", "fetch_missing": {}, "gaps": [], "generated_at": "2026-10-21T23:34+08:00", "industries": [{"down": 59, "flat": 11, "group": "electronic", "institution_value_100m": -178.26, "institution_value_5d_100m": -1043.48, "marketcap_share_pct": 10.75, "n_stocks": 209, "name": "電子零組件", "return_1d_pct": 1.8, "return_20d_pct": 3.42, "return_5d_pct": -6.92, "turnover_100m": 3152.3, "turnover_share_avg20_pct": 25.83, "turnover_share_deviation_pp": 4.81, "turnover_share_pct": 30.65, "up": 139}, {"down": 22, "flat": 13, "group": "electronic", "institution_value_100m": -20.65, "institution_value_5d_100m": -3006.38, "marketcap_share_pct": 54.11, "n_stocks": 206, "name": "半導體業", "return_1d_pct": 1.09, "return_20d_pct": -3.33, "return_5d_pct": -4.1, "turnover_100m": 3151.4, "turnover_share_avg20_pct": 38.77, "turnover_share_deviation_pp": -8.13, "turnover_share_pct": 30.64, "up": 171}, {"down": 36, "flat": 7, "group": "electronic", "institution_value_100m": 50.64, "institution_value_5d_100m": 31.78, "marketcap_share_pct": 1.77, "n_stocks": 116, "name": "光電業", "return_1d_pct": 3.19, "return_20d_pct": 4.62, "return_5d_pct": -3.15, "turnover_100m": 823.7, "turnover_share_avg20_pct": 7.79, "turnover_share_deviation_pp": 0.22, "turnover_share_pct": 8.01, "up": 73}, {"down": 38, "flat": 8, "group": "electronic", "institution_value_100m": 34.81, "institution_value_5d_100m": 40.21, "marketcap_share_pct": 5.33, "n_stocks": 109, "name": "電腦及週邊設備", "return_1d_pct": 0.18, "return_20d_pct": -2.94, "return_5d_pct": -2.22, "turnover_100m": 743.0, "turnover_share_avg20_pct": 5.5, "turnover_share_deviation_pp": 1.72, "turnover_share_pct": 7.22, "up": 63}, {"down": 23, "flat": 7, "group": "electronic", "institution_value_100m": 31.8, "institution_value_5d_100m": -96.76, "marketcap_share_pct": 4.07, "n_stocks": 93, "name": "其他電子業", "return_1d_pct": 2.34, "return_20d_pct": -2.99, "return_5d_pct": -2.48, "turnover_100m": 510.4, "turnover_share_avg20_pct": 4.62, "turnover_share_deviation_pp": 0.34, "turnover_share_pct": 4.96, "up": 63}, {"down": 8, "flat": 3, "group": "other", "institution_value_100m": 94.46, "institution_value_5d_100m": -199.82, "marketcap_share_pct": 2.22, "n_stocks": 25, "name": "塑膠工業", "return_1d_pct": 6.5, "return_20d_pct": 27.23, "return_5d_pct": -9.21, "turnover_100m": 458.2, "turnover_share_avg20_pct": 3.23, "turnover_share_deviation_pp": 1.23, "turnover_share_pct": 4.45, "up": 14}, {"down": 20, "flat": 11, "group": "electronic", "institution_value_100m": -39.83, "institution_value_5d_100m": 10.65, "marketcap_share_pct": 2.76, "n_stocks": 91, "name": "通信網路業", "return_1d_pct": -1.04, "return_20d_pct": 0.24, "return_5d_pct": -2.83, "turnover_100m": 423.6, "turnover_share_avg20_pct": 4.23, "turnover_share_deviation_pp": -0.11, "turnover_share_pct": 4.12, "up": 60}, {"down": 3, "flat": 1, "group": "other", "institution_value_100m": 67.93, "institution_value_5d_100m": 198.34, "marketcap_share_pct": 8.4, "n_stocks": 40, "name": "金融保險", "return_1d_pct": 2.53, "return_20d_pct": 2.78, "return_5d_pct": 0.95, "turnover_100m": 222.1, "turnover_share_avg20_pct": 1.91, "turnover_share_deviation_pp": 0.25, "turnover_share_pct": 2.16, "up": 36}, {"down": 37, "flat": 11, "group": "other", "institution_value_100m": 14.7, "institution_value_5d_100m": 6.91, "marketcap_share_pct": 1.17, "n_stocks": 99, "name": "電機機械", "return_1d_pct": 1.89, "return_20d_pct": -2.23, "return_5d_pct": -3.8, "turnover_100m": 199.2, "turnover_share_avg20_pct": 1.8, "turnover_share_deviation_pp": 0.13, "turnover_share_pct": 1.94, "up": 51}, {"down": 3, "flat": 1, "group": "other", "institution_value_100m": -14.16, "institution_value_5d_100m": -18.55, "marketcap_share_pct": 0.13, "n_stocks": 5, "name": "玻璃陶瓷", "return_1d_pct": -0.25, "return_20d_pct": 13.34, "return_5d_pct": 0.42, "turnover_100m": 105.8, "turnover_share_avg20_pct": 0.46, "turnover_share_deviation_pp": 0.57, "turnover_share_pct": 1.03, "up": 1}, {"down": 7, "flat": 4, "group": "other", "institution_value_100m": 0.94, "institution_value_5d_100m": -4.63, "marketcap_share_pct": 0.4, "n_stocks": 42, "name": "化學工業", "return_1d_pct": 1.31, "return_20d_pct": 4.62, "return_5d_pct": -3.89, "turnover_100m": 83.4, "turnover_share_avg20_pct": 0.8, "turnover_share_deviation_pp": 0.01, "turnover_share_pct": 0.81, "up": 31}, {"down": 13, "flat": 2, "group": "other", "institution_value_100m": -1.24, "institution_value_5d_100m": 48.0, "marketcap_share_pct": 1.31, "n_stocks": 32, "name": "航運業", "return_1d_pct": -0.19, "return_20d_pct": 0.9, "return_5d_pct": -3.14, "turnover_100m": 72.6, "turnover_share_avg20_pct": 0.86, "turnover_share_deviation_pp": -0.15, "turnover_share_pct": 0.71, "up": 17}, {"down": 53, "flat": 25, "group": "other", "institution_value_100m": 7.28, "institution_value_5d_100m": 20.69, "marketcap_share_pct": 1.02, "n_stocks": 154, "name": "生技醫療", "return_1d_pct": 1.09, "return_20d_pct": -3.75, "return_5d_pct": -1.74, "turnover_100m": 48.9, "turnover_share_avg20_pct": 0.67, "turnover_share_deviation_pp": -0.2, "turnover_share_pct": 0.48, "up": 76}, {"down": 6, "flat": 1, "group": "other", "institution_value_100m": 12.67, "institution_value_5d_100m": 18.76, "marketcap_share_pct": 0.72, "n_stocks": 12, "name": "油電燃氣", "return_1d_pct": 2.46, "return_20d_pct": 22.68, "return_5d_pct": -7.79, "turnover_100m": 43.7, "turnover_share_avg20_pct": 0.41, "turnover_share_deviation_pp": 0.01, "turnover_share_pct": 0.43, "up": 5}, {"down": 31, "flat": 7, "group": "other", "institution_value_100m": 1.41, "institution_value_5d_100m": 12.76, "marketcap_share_pct": 0.59, "n_stocks": 91, "name": "其他", "return_1d_pct": 0.36, "return_20d_pct": -1.15, "return_5d_pct": -0.79, "turnover_100m": 39.9, "turnover_share_avg20_pct": 0.49, "turnover_share_deviation_pp": -0.1, "turnover_share_pct": 0.39, "up": 53}, {"down": 9, "flat": 1, "group": "electronic", "institution_value_100m": 9.24, "institution_value_5d_100m": 4.36, "marketcap_share_pct": 0.64, "n_stocks": 38, "name": "電子通路業", "return_1d_pct": 1.64, "return_20d_pct": 2.84, "return_5d_pct": -2.54, "turnover_100m": 37.7, "turnover_share_avg20_pct": 0.52, "turnover_share_deviation_pp": -0.15, "turnover_share_pct": 0.37, "up": 28}, {"down": 18, "flat": 8, "group": "other", "institution_value_100m": 2.89, "institution_value_5d_100m": 32.39, "marketcap_share_pct": 0.56, "n_stocks": 48, "name": "鋼鐵工業", "return_1d_pct": 0.32, "return_20d_pct": 4.81, "return_5d_pct": 0.62, "turnover_100m": 26.3, "turnover_share_avg20_pct": 0.26, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.26, "up": 22}, {"down": 10, "flat": 3, "group": "electronic", "institution_value_100m": 1.5, "institution_value_5d_100m": 6.65, "marketcap_share_pct": 0.15, "n_stocks": 45, "name": "資訊服務業", "return_1d_pct": 1.31, "return_20d_pct": 2.49, "return_5d_pct": 0.07, "turnover_100m": 17.7, "turnover_share_avg20_pct": 0.18, "turnover_share_deviation_pp": -0.01, "turnover_share_pct": 0.17, "up": 32}, {"down": 18, "flat": 9, "group": "other", "institution_value_100m": 0.03, "institution_value_5d_100m": 7.23, "marketcap_share_pct": 0.44, "n_stocks": 44, "name": "汽車工業", "return_1d_pct": -0.33, "return_20d_pct": -1.67, "return_5d_pct": -2.23, "turnover_100m": 14.1, "turnover_share_avg20_pct": 0.2, "turnover_share_deviation_pp": -0.06, "turnover_share_pct": 0.14, "up": 17}, {"down": 22, "flat": 5, "group": "other", "institution_value_100m": 0.15, "institution_value_5d_100m": 2.5, "marketcap_share_pct": 0.27, "n_stocks": 44, "name": "綠能環保", "return_1d_pct": 0.61, "return_20d_pct": -6.21, "return_5d_pct": -3.86, "turnover_100m": 14.1, "turnover_share_avg20_pct": 0.23, "turnover_share_deviation_pp": -0.09, "turnover_share_pct": 0.14, "up": 17}, {"down": 13, "flat": 3, "group": "other", "institution_value_100m": -0.84, "institution_value_5d_100m": 14.42, "marketcap_share_pct": 0.27, "n_stocks": 27, "name": "運動休閒", "return_1d_pct": -0.86, "return_20d_pct": -0.65, "return_5d_pct": -0.83, "turnover_100m": 11.9, "turnover_share_avg20_pct": 0.08, "turnover_share_deviation_pp": 0.04, "turnover_share_pct": 0.12, "up": 11}, {"down": 16, "flat": 6, "group": "other", "institution_value_100m": 1.99, "institution_value_5d_100m": 38.26, "marketcap_share_pct": 0.49, "n_stocks": 34, "name": "食品工業", "return_1d_pct": 0.03, "return_20d_pct": 1.01, "return_5d_pct": -0.61, "turnover_100m": 11.5, "turnover_share_avg20_pct": 0.12, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.11, "up": 12}, {"down": 18, "flat": 5, "group": "other", "institution_value_100m": 1.67, "institution_value_5d_100m": 4.16, "marketcap_share_pct": 0.17, "n_stocks": 39, "name": "數位雲端", "return_1d_pct": 1.04, "return_20d_pct": -1.23, "return_5d_pct": -0.35, "turnover_100m": 11.5, "turnover_share_avg20_pct": 0.09, "turnover_share_deviation_pp": 0.03, "turnover_share_pct": 0.11, "up": 16}, {"down": 1, "flat": 2, "group": "other", "institution_value_100m": 2.04, "institution_value_5d_100m": 10.27, "marketcap_share_pct": 0.23, "n_stocks": 7, "name": "水泥工業", "return_1d_pct": 0.17, "return_20d_pct": 7.81, "return_5d_pct": 0.12, "turnover_100m": 9.8, "turnover_share_avg20_pct": 0.14, "turnover_share_deviation_pp": -0.05, "turnover_share_pct": 0.1, "up": 4}, {"down": 41, "flat": 10, "group": "other", "institution_value_100m": -0.34, "institution_value_5d_100m": 10.24, "marketcap_share_pct": 0.57, "n_stocks": 85, "name": "建材營造", "return_1d_pct": -0.14, "return_20d_pct": -5.41, "return_5d_pct": -1.28, "turnover_100m": 10.6, "turnover_share_avg20_pct": 0.14, "turnover_share_deviation_pp": -0.04, "turnover_share_pct": 0.1, "up": 34}, {"down": 9, "flat": 4, "group": "other", "institution_value_100m": 1.56, "institution_value_5d_100m": 20.12, "marketcap_share_pct": 0.18, "n_stocks": 25, "name": "文化創意業", "return_1d_pct": -0.09, "return_20d_pct": 4.96, "return_5d_pct": -2.97, "turnover_100m": 9.8, "turnover_share_avg20_pct": 0.18, "turnover_share_deviation_pp": -0.08, "turnover_share_pct": 0.1, "up": 12}, {"down": 28, "flat": 8, "group": "other", "institution_value_100m": 0.34, "institution_value_5d_100m": 14.57, "marketcap_share_pct": 0.32, "n_stocks": 52, "name": "紡織纖維", "return_1d_pct": 0.04, "return_20d_pct": 4.11, "return_5d_pct": -2.09, "turnover_100m": 8.8, "turnover_share_avg20_pct": 0.14, "turnover_share_deviation_pp": -0.06, "turnover_share_pct": 0.09, "up": 16}, {"down": 6, "flat": 2, "group": "other", "institution_value_100m": 0.34, "institution_value_5d_100m": -16.16, "marketcap_share_pct": 0.18, "n_stocks": 17, "name": "電器電纜", "return_1d_pct": 0.73, "return_20d_pct": -0.13, "return_5d_pct": -6.6, "turnover_100m": 6.9, "turnover_share_avg20_pct": 0.15, "turnover_share_deviation_pp": -0.08, "turnover_share_pct": 0.07, "up": 9}, {"down": 16, "flat": 6, "group": "other", "institution_value_100m": 0.84, "institution_value_5d_100m": 7.13, "marketcap_share_pct": 0.19, "n_stocks": 34, "name": "居家生活", "return_1d_pct": 0.85, "return_20d_pct": -0.24, "return_5d_pct": 0.09, "turnover_100m": 5.4, "turnover_share_avg20_pct": 0.05, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.05, "up": 12}, {"down": 12, "flat": 1, "group": "other", "institution_value_100m": 0.85, "institution_value_5d_100m": 35.61, "marketcap_share_pct": 0.24, "n_stocks": 18, "name": "貿易百貨", "return_1d_pct": -0.77, "return_20d_pct": 1.45, "return_5d_pct": 0.85, "turnover_100m": 5.3, "turnover_share_avg20_pct": 0.06, "turnover_share_deviation_pp": -0.01, "turnover_share_pct": 0.05, "up": 5}, {"down": 7, "flat": 2, "group": "other", "institution_value_100m": -0.15, "institution_value_5d_100m": 7.56, "marketcap_share_pct": 0.13, "n_stocks": 11, "name": "橡膠工業", "return_1d_pct": -0.47, "return_20d_pct": 3.39, "return_5d_pct": -0.87, "turnover_100m": 3.3, "turnover_share_avg20_pct": 0.04, "turnover_share_deviation_pp": -0.01, "turnover_share_pct": 0.03, "up": 2}, {"down": 25, "flat": 8, "group": "other", "institution_value_100m": -0.06, "institution_value_5d_100m": 4.73, "marketcap_share_pct": 0.13, "n_stocks": 48, "name": "觀光餐旅", "return_1d_pct": -0.21, "return_20d_pct": 0.31, "return_5d_pct": -0.29, "turnover_100m": 2.1, "turnover_share_avg20_pct": 0.02, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.02, "up": 15}, {"down": 4, "flat": 2, "group": "other", "institution_value_100m": -0.23, "institution_value_5d_100m": 0.2, "marketcap_share_pct": 0.08, "n_stocks": 7, "name": "造紙工業", "return_1d_pct": -0.33, "return_20d_pct": -2.19, "return_5d_pct": -2.78, "turnover_100m": 1.0, "turnover_share_avg20_pct": 0.01, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.01, "up": 1}, {"down": 0, "flat": 2, "group": "other", "institution_value_100m": -0.0, "institution_value_5d_100m": -0.0, "marketcap_share_pct": 0.0, "n_stocks": 4, "name": "農業科技", "return_1d_pct": 0.34, "return_20d_pct": -0.22, "return_5d_pct": -1.2, "turnover_100m": 0.0, "turnover_share_avg20_pct": 0.0, "turnover_share_deviation_pp": -0.0, "turnover_share_pct": 0.0, "up": 2}], "institution_days": 21, "listed_institutions_100m": {"1d": {"dealer": -135.72, "foreign": 22.39, "total": 14.66, "trust": 127.99}, "20d": {"dealer": -2769.8, "foreign": -7009.47, "total": -8483.6, "trust": 1295.67}, "5d": {"dealer": -2146.52, "foreign": -5027.46, "total": -6229.03, "trust": 944.95}}, "notes": [], "ordinary_turnover_100m": 10286.0, "ordinary_turnover_by_market_100m": {"上市": 8142.0, "上櫃": 2144.0}, "public_candidates": {"evaluated_count": 1979, "items": [{"breakout_score": 61.25, "change_pct": 2.87, "close": 93.3, "final_score": 86.78, "industry": "鋼鐵工業", "institution_5d_lots": 2024, "institution_lots": 704, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "東和鋼鐵", "provisional": true, "rank": 1, "risks": ["RSI 偏熱（中）"], "setup_score": 80.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "收盤強勢（強）", "法人籌碼累積（強）"], "symbol": "2006", "tier": "B", "turnover_100m": 2.33}, {"breakout_score": 61.25, "change_pct": 4.47, "close": 74.8, "final_score": 83.78, "industry": "金融保險", "institution_5d_lots": 32710, "institution_lots": 13084, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "中信金", "provisional": true, "rank": 2, "risks": ["RSI 偏熱（中）"], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "收盤強勢（強）", "法人籌碼累積（強）"], "symbol": "2891", "tier": "B", "turnover_100m": 32.71}, {"breakout_score": 44.0, "change_pct": 0.0, "close": 105.0, "final_score": 82.98, "industry": "電腦及週邊設備", "institution_5d_lots": 22726, "institution_lots": 4944, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "和碩", "provisional": true, "rank": 3, "risks": ["離 20 日線過遠（弱）", "RSI 偏熱（中）", "盤中突破但收盤沒守住"], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破有量（強）", "法人籌碼累積（強）"], "symbol": "4938", "tier": "B", "turnover_100m": 32.03}, {"breakout_score": 75.0, "change_pct": 2.86, "close": 270.0, "final_score": 82.56, "industry": "生技醫療", "institution_5d_lots": 326, "institution_lots": 125, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "視陽", "provisional": true, "rank": 4, "risks": ["離 20 日線過遠（弱）", "5 日漲幅過大（弱）"], "setup_score": 78.0, "state": "初步突破", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（強）", "突破有量（強）", "收盤強勢（強）", "法人籌碼累積（中）"], "symbol": "6782", "tier": "B", "turnover_100m": 2.3}, {"breakout_score": 45.25, "change_pct": -0.31, "close": 32.3, "final_score": 82.5, "industry": "電腦及週邊設備", "institution_5d_lots": 23126, "institution_lots": 1049, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "宏碁", "provisional": true, "rank": 5, "risks": [], "setup_score": 75.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（中）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "法人籌碼累積（強）"], "symbol": "2353", "tier": "B", "turnover_100m": 6.27}, {"breakout_score": 46.75, "change_pct": 0.3, "close": 165.0, "final_score": 81.8, "industry": "電腦及週邊設備", "institution_5d_lots": 16196, "institution_lots": 167, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "微星", "provisional": true, "rank": 6, "risks": ["RSI 過熱（80 以上）"], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "法人籌碼累積（中）"], "symbol": "2377", "tier": "B", "turnover_100m": 13.54}, {"breakout_score": 75.0, "change_pct": 9.98, "close": 220.5, "final_score": 80.2, "industry": "半導體業", "institution_5d_lots": 55, "institution_lots": 79, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "暉盛-創", "provisional": true, "rank": 7, "risks": ["漲停追價（強）", "離 20 日線過遠（中）"], "setup_score": 78.0, "state": "初步突破", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（強）", "突破有量（強）", "收盤強勢（強）", "法人籌碼累積（中）"], "symbol": "7730", "tier": "B", "turnover_100m": 0.79}, {"breakout_score": 61.25, "change_pct": 3.53, "close": 49.8, "final_score": 79.5, "industry": "金融保險", "institution_5d_lots": 9064, "institution_lots": 5293, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "華南金", "provisional": true, "rank": 8, "risks": [], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（中）", "收盤強勢（強）"], "symbol": "2880", "tier": "B", "turnover_100m": 8.04}, {"breakout_score": 48.75, "change_pct": 3.87, "close": 590.0, "final_score": 79.5, "industry": "半導體業", "institution_5d_lots": 6847, "institution_lots": 2205, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "聯詠", "provisional": true, "rank": 9, "risks": ["盤中突破但收盤沒守住"], "setup_score": 77.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破有量（中）", "收盤強勢（中）"], "symbol": "3034", "tier": "B", "turnover_100m": 27.96}, {"breakout_score": 53.0, "change_pct": 3.17, "close": 195.0, "final_score": 79.5, "industry": "電腦及週邊設備", "institution_5d_lots": 29921, "institution_lots": 23988, "market": "上市", "missing": ["隔日續量", "族群確認", "族群同步起動", "相對強度改善"], "name": "緯創", "provisional": true, "rank": 10, "risks": [], "setup_score": 72.0, "state": "準備就緒", "supports": ["均線排列向上（強）", "量能起動（強）", "底部整理完整（強）", "接近 60 日前高（強）", "突破前高（中）", "突破有量（強）", "法人籌碼累積（強）"], "symbol": "3231", "tier": "B", "turnover_100m": 157.06}]}, "stock_count": 1951, "summary": ["上市三大法人合計 +14.66 億（外資 +22.39、投信 +127.99、自營商 −135.72）；近 5 日合計 −6,229 億。", "成交最集中：電子零組件 30.6%＋半導體業 30.6%，合計 61.3%。", "比近 20 日平常更熱：電子零組件（+4.8 個百分點）、電腦及週邊設備（+1.7 個百分點）；更冷：半導體業（−8.1 個百分點）、生技醫療（−0.2 個百分點）。", "今日最強：塑膠工業 +6.5%；最弱：通信網路業 −1.0%（只比成交占比 0.5% 以上的產業）。", "近 5 日最強：金融保險 +0.9%；最弱：塑膠工業 −9.2%（只比成交占比 0.5% 以上的產業）。", "近 20 日最強：塑膠工業 +27.2%；最弱：半導體業 −3.3%（只比成交占比 0.5% 以上的產業）。", "法人估算買超最多：塑膠工業 +94.5 億；賣超最多：電子零組件 −178.3 億（上市櫃合計，淨股數×收盤價估算）。", "普通股上漲 1120 檔、下跌 632 檔、平盤或未成交 199 檔。"], "taiex": {"change_pct": 1.28, "change_points": 594.84, "close": 46887.77}, "top10": [{"change_pct": 0.62, "close": 2420.0, "dealer_lots": -1048, "foreign_lots": -6154, "industry": "半導體業", "institution_20d_lots": -101363, "institution_5d_lots": -64603, "institution_lots": -5804, "institution_value_100m": -140.46, "market": "上市", "name": "台積電", "rank": 1, "symbol": "2330", "trust_lots": 1398, "turnover_100m": 655.2}, {"change_pct": 8.28, "close": 320.5, "dealer_lots": 2174, "foreign_lots": 24165, "industry": "塑膠工業", "institution_20d_lots": 32703, "institution_5d_lots": -33914, "institution_lots": 26525, "institution_value_100m": 85.01, "market": "上市", "name": "南亞", "rank": 2, "symbol": "1303", "trust_lots": 186, "turnover_100m": 393.4}, {"change_pct": -0.24, "close": 4140.0, "dealer_lots": -652, "foreign_lots": -1162, "industry": "半導體業", "institution_20d_lots": -29749, "institution_5d_lots": -11729, "institution_lots": -1646, "institution_value_100m": -68.14, "market": "上市", "name": "聯發科", "rank": 3, "symbol": "2454", "trust_lots": 167, "turnover_100m": 391.0}, {"change_pct": -3.23, "close": 1500.0, "dealer_lots": 113, "foreign_lots": -3857, "industry": "電子零組件", "institution_20d_lots": -4769, "institution_5d_lots": -5063, "institution_lots": -4282, "institution_value_100m": -64.23, "market": "上櫃", "name": "台燿", "rank": 4, "symbol": "6274", "trust_lots": -538, "turnover_100m": 321.1}, {"change_pct": 6.88, "close": 1010.0, "dealer_lots": -203, "foreign_lots": 120, "industry": "半導體業", "institution_20d_lots": 28169, "institution_5d_lots": -4231, "institution_lots": 174, "institution_value_100m": 1.76, "market": "上市", "name": "景碩", "rank": 5, "symbol": "3189", "trust_lots": 258, "turnover_100m": 216.6}, {"change_pct": 4.27, "close": 1100.0, "dealer_lots": 51, "foreign_lots": -1687, "industry": "電子零組件", "institution_20d_lots": 15501, "institution_5d_lots": -11866, "institution_lots": -666, "institution_value_100m": -7.33, "market": "上市", "name": "欣興", "rank": 6, "symbol": "3037", "trust_lots": 970, "turnover_100m": 212.0}, {"change_pct": -4.55, "close": 147.0, "dealer_lots": 221, "foreign_lots": -21516, "industry": "電子零組件", "institution_20d_lots": 2700, "institution_5d_lots": 25337, "institution_lots": -21149, "institution_value_100m": -31.09, "market": "上櫃", "name": "富喬", "rank": 7, "symbol": "1815", "trust_lots": 146, "turnover_100m": 210.2}, {"change_pct": 5.67, "close": 578.0, "dealer_lots": 425, "foreign_lots": 1279, "industry": "電子零組件", "institution_20d_lots": 26538, "institution_5d_lots": -4180, "institution_lots": 2423, "institution_value_100m": 14.01, "market": "上市", "name": "臻鼎-KY", "rank": 8, "symbol": "4958", "trust_lots": 719, "turnover_100m": 199.2}, {"change_pct": 1.25, "close": 1625.0, "dealer_lots": -155, "foreign_lots": -2535, "industry": "電子零組件", "institution_20d_lots": -19738, "institution_5d_lots": -18592, "institution_lots": -2336, "institution_value_100m": -37.96, "market": "上市", "name": "台達電", "rank": 9, "symbol": "2308", "trust_lots": 354, "turnover_100m": 187.1}, {"change_pct": 3.63, "close": 542.0, "dealer_lots": 450, "foreign_lots": 4187, "industry": "電子零組件", "institution_20d_lots": -38695, "institution_5d_lots": -38023, "institution_lots": 4970, "institution_value_100m": 26.94, "market": "上市", "name": "國巨*", "rank": 10, "symbol": "2327", "trust_lots": 334, "turnover_100m": 186.5}], "tpex_index": {"change_pct": 1.94, "change_points": 7.54, "close": 395.42}, "window_days": ["2026-09-18", "2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16", "2026-10-19", "2026-10-20", "2026-10-21"]}</script>
 <script>
 (function () {
   'use strict';
@@ -904,7 +939,7 @@ footer b{color:var(--ink)}
 
   // Candidate K line: candles + 20-day average + prior 60-day high, volume underneath.
   var klines = [];
-  function drawKline(box, dates, k, label) {
+  function drawKline(box, dates, k, label, trades) {  // trades: the user's journal entries, marked on their dates
     box.textContent = '';
     var W = box.clientWidth, n = k.close.length;
     if (!W || !n) return;
@@ -947,6 +982,23 @@ footer b{color:var(--ink)}
     var vt = sv('text', { x: left + plotW + 5, y: priceH + gap + 11, 'font-size': 11, fill: cssVar('--muted') });
     vt.textContent = '量';
     svg.appendChild(vt);
+    var marked = {};
+    (trades || []).forEach(function (t) {
+      var i = dates.indexOf(t.date);
+      if (i < 0 || k.close[i] == null) return;
+      (marked[i] = marked[i] || []).push(t);
+    });
+    Object.keys(marked).forEach(function (i) {
+      var sides = marked[i].map(function (t) { return t.side; });
+      if (sides.indexOf('buy') >= 0) {
+        var b = sv('text', { x: X(+i), y: Math.min(priceH - 2, Y(k.low[i]) + 13), 'font-size': 11, 'font-weight': 700, 'text-anchor': 'middle', fill: cssVar('--accent') });
+        b.textContent = '買'; svg.appendChild(b);
+      }
+      if (sides.indexOf('sell') >= 0) {
+        var s = sv('text', { x: X(+i), y: Math.max(11, Y(k.high[i]) - 4), 'font-size': 11, 'font-weight': 700, 'text-anchor': 'middle', fill: cssVar('--warn-text') });
+        s.textContent = '賣'; svg.appendChild(s);
+      }
+    });
     xAxis(svg, dates, X, plotW, total - 4);
     hover(svg, W, left, plotW, n, X, 0, vb, function (j) {
       var change = j > 0 && k.close[j - 1] ? (k.close[j] / k.close[j - 1] - 1) * 100 : null;
@@ -955,7 +1007,9 @@ footer b{color:var(--ink)}
         ['低／收', k.close[j] == null ? '—' : num(k.low[j], 2) + '／' + num(k.close[j], 2)],
         ['較前日', pct(change), dir(change)],
         ['成交量', k.volume_lots[j] == null ? '—' : num(k.volume_lots[j]) + ' 張'],
-        ['20 日均線', k.ma20[j] == null ? '資料不足' : num(k.ma20[j], 2)]];
+        ['20 日均線', k.ma20[j] == null ? '資料不足' : num(k.ma20[j], 2)]].concat((marked[j] || []).map(function (t) {
+          return ['我的紀錄', (t.side === 'buy' ? '買進 ' : '賣出 ') + num(t.shares) + ' 股 @ ' + t.price];
+        }));
     });
     box.appendChild(svg);
   }
@@ -981,10 +1035,13 @@ footer b{color:var(--ink)}
   var RISK_CLASSES = { disposition: 'dispo', attention: 'attn', exright: 'exr' };
   var MARKET_KEYS = { '上市': 'listed', '上櫃': 'otc', listed: 'listed', otc: 'otc' };
   if (RISK) RISK.stocks.forEach(function (r) { RISK_BY[r.market + ':' + r.symbol] = r; });
+  if (D.tracking) Object.keys(D.tracking.stocks).forEach(function (k) {  // tracked ETFs carry the same notice fields
+    if (!RISK_BY[k]) RISK_BY[k] = D.tracking.stocks[k];
+  });
   function riskTag(kind, r) {  // the generator's risk_tag_text() says the same
-    if (kind === 'disposition') return r.disposition.start > RISK.date ? '將處置' : '處置';
+    if (kind === 'disposition') return r.disposition.start > D.date ? '將處置' : '處置';
     if (kind === 'attention') return '注意';
-    return r.exright.kind + ' ' + (r.exright.date === RISK.date ? '今日' : md(r.exright.date));
+    return r.exright.kind + ' ' + (r.exright.date === D.date ? '今日' : md(r.exright.date));
   }
   function cashText(x) { return x.cash == null ? '—' : parseFloat(x.cash.toFixed(4)) + ' 元'; }
   function riskTip(kind, r) {
@@ -1386,6 +1443,160 @@ footer b{color:var(--ink)}
     renderKlines();
   }
 
+  // ---------- private: stock tracking with the user's own trade journal ----------
+  // Entries are read from and saved to the local research console; the generated page holds only market data.
+  var TRACK = D.tracking, journal = [], journalToken = null, journalReady = false, tradeFilter = '', trackKlines = [];
+  var SIDE_NAMES = { buy: '買進', sell: '賣出' }, MODE_NAMES = { swing: '波段', intraday: '當沖', long_term: '長期' };
+  function tradeKey(e) { return e.market + ':' + e.symbol; }
+  function byDate(a, b) {
+    return a.date < b.date ? -1 : a.date > b.date ? 1 : a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0;
+  }
+  // Moving-average cost over this journal only. A sale larger than the recorded shares (the stock was held
+  // before the journal began) leaves the realized total unknown instead of guessing the older cost.
+  function bookkeeping(entries) {
+    var held = 0, cost = 0, realized = 0, bought = 0, sold = 0, short = false, unfilledFee = false;
+    entries.forEach(function (e) {
+      var fee = e.fee == null ? 0 : e.fee;
+      if (e.fee == null) unfilledFee = true;
+      if (e.side === 'buy') { held += e.shares; cost += e.shares * e.price + fee; bought += e.shares; return; }
+      sold += e.shares;
+      if (e.shares > held) { short = true; held = 0; cost = 0; return; }
+      var avg = cost / held;
+      realized += e.shares * (e.price - avg) - fee; cost -= avg * e.shares; held -= e.shares;
+    });
+    return { held: held, avg: held ? cost / held : null, realized: short ? null : realized, bought: bought, sold: sold,
+      short: short, unfilledFee: unfilledFee };
+  }
+  function setTradeStatus(text) { document.getElementById('tradeStatus').textContent = text; }
+  function trackingCard(key, trades) {
+    var s = TRACK && TRACK.stocks[key], market = key.split(':')[0], symbol = key.split(':')[1];
+    var card = el('article', 'card'), top = el('div', 'card-top');
+    var name = el('div', 'card-name', s ? s.name : trades[0].name);
+    riskTags(name, market, symbol);
+    name.appendChild(el('small', null, symbol + '｜' + MARKET_NAMES[market] + (s && s.industry ? '｜' + s.industry : '') + (s && s.held ? '｜持股快照' : '')));
+    top.appendChild(name);
+    if (s && s.close != null) {
+      var price = el('div', 'card-price');
+      price.appendChild(el('div', null, num(s.close, s.close < 100 ? 2 : 1)));
+      price.appendChild(el('div', dir(s.change_pct), pct(s.change_pct)));
+      top.appendChild(price);
+    }
+    card.appendChild(top);
+    if (s) {
+      var side = function (ma) { return ma == null ? '資料不足' : num(ma, 2) + (s.close >= ma ? '（收盤在上）' : '（收盤在下）'); };
+      card.appendChild(el('div', 'card-meta', '20 日線 ' + side(s.ma20) + '｜60 日線 ' + side(s.ma60) + '｜近 20 日 ' + pct(s.return_20d_pct)));
+      card.appendChild(el('div', 'card-meta', '三大法人 今日 ' + lotsText(s.institution_lots) + '；近 5 日 ' + lotsText(s.institution_5d_lots)
+        + (s.retail ? '｜融資 5 日 ' + pct(s.retail.margin_change_pct) + '・當沖比 5 日 ' + ratio(s.retail.daytrade_pct_5d) : '')));
+    } else {
+      card.appendChild(el('div', 'card-meta', '還沒有行情：新加入的代號要等下次更新網站後才會出現。'));
+    }
+    if (trades.length) {
+      var b = bookkeeping(trades), line = function (label, value) {
+        var p = el('div', 'pnl'); p.appendChild(document.createTextNode(label)); p.appendChild(el('span', dir(value), signed(value, 0, ' 元'))); return p;
+      };
+      card.appendChild(el('div', 'pnl', '我的紀錄 ' + trades.length + ' 筆：買 ' + num(b.bought) + ' 股、賣 ' + num(b.sold) + ' 股；'
+        + (b.held ? '依紀錄持有 ' + num(b.held) + ' 股，平均成本 ' + num(b.avg, 2) + ' 元' : '依紀錄目前沒有持股')));
+      if (b.realized == null) card.appendChild(el('div', 'pnl', '已實現損益：資料不足（賣出多於本頁的買進紀錄；記錄前就持有的股票，可以先記一筆期初買進）'));
+      else if (b.sold) card.appendChild(line('已實現損益 ', b.realized));
+      if (b.held && s && s.close != null) card.appendChild(line('以 ' + md(D.date) + ' 收盤估的未實現損益 ', (s.close - b.avg) * b.held));
+      if (b.unfilledFee) card.appendChild(el('div', 'card-meta', '有紀錄沒填費用，損益沒有扣那部分。'));
+    }
+    if (s && s.kline && HIST) {
+      var kbox = el('div', 'chart kline');
+      card.appendChild(kbox);
+      trackKlines.push([kbox, HIST.dates.slice(-s.kline.close.length), s.kline, s.name + '（' + symbol + '）', trades]);
+      card.appendChild(el('div', 'card-meta', '近 ' + s.kline.close.length + ' 日 K 線，未還原除權息｜藍線＝20 日均線｜買／賣＝我的紀錄'));
+    }
+    if (trades.length) {
+      var show = el('button', null, '只看這檔紀錄');
+      show.type = 'button';
+      show.addEventListener('click', function () { tradeFilter = key; renderTradeTable(); document.getElementById('tradeTitle').scrollIntoView(); });
+      card.appendChild(show);
+    }
+    return card;
+  }
+  function renderTracking() {
+    if (!D.private) return;
+    document.getElementById('trackingPanel').hidden = false;
+    document.getElementById('trackingNote').textContent = '自己記錄每天的買賣：存在本機 data/user_input/trade_journal/，不會進 Git 或公開網站。'
+      + '卡片列出有交易紀錄的股票，以及最新確認持股快照裡的股票；行情是 ' + D.date + ' 收盤（未還原），新加入的代號要下次更新網站後才有行情。'
+      + '損益只用本頁紀錄、移動平均成本計算，費用沒填就不扣；記錄前就持有的股票，可以先記一筆期初買進（股數、均價）。這是記帳與官方資料整理，不是買賣建議。';
+    var groups = {};
+    journal.slice().sort(byDate).forEach(function (e) { (groups[tradeKey(e)] = groups[tradeKey(e)] || []).push(e); });
+    var traded = Object.keys(groups).sort(function (a, b) {
+      var x = groups[a][groups[a].length - 1].date, y = groups[b][groups[b].length - 1].date;
+      return x < y ? 1 : x > y ? -1 : a < b ? -1 : 1;
+    });
+    var others = TRACK ? Object.keys(TRACK.stocks).filter(function (k) { return !groups[k]; }).sort() : [];
+    var box = document.getElementById('trackingCards');
+    box.textContent = '';
+    trackKlines = [];
+    traded.concat(others).forEach(function (key) { box.appendChild(trackingCard(key, groups[key] || [])); });
+    if (!box.children.length) box.appendChild(el('p', 'gap', '還沒有追蹤的股票。記下第一筆後，這裡會出現那檔股票的卡片。'));
+    renderTradeTable();
+    renderTrackKlines();
+  }
+  function renderTrackKlines() {
+    trackKlines.forEach(function (item) { drawKline(item[0], item[1], item[2], item[3], item[4]); });
+  }
+  function renderTradeTable() {
+    var table = document.getElementById('tradeTable');
+    table.textContent = '';
+    var rows = journal.filter(function (e) { return !tradeFilter || tradeKey(e) === tradeFilter; }).sort(byDate).reverse();
+    document.getElementById('tradeTitle').textContent = '交易紀錄' + (tradeFilter && rows[0] ? '：' + rows[0].name : '') + '（' + rows.length + ' 筆）';
+    document.getElementById('tradeFilterClear').hidden = !tradeFilter;
+    if (!rows.length) { if (journalReady) table.appendChild(el('caption', 'gap', '還沒有紀錄。')); return; }
+    header(table, ['股票', '日期', '買賣', '股數', '成交價', '金額', '費用', '類型', '備註', '']);
+    var body = el('tbody');
+    rows.forEach(function (e) {
+      var tr = el('tr'), first = cell(tr, '', null);
+      first.appendChild(el('span', 'name', e.name));
+      first.appendChild(el('small', null, e.symbol + '｜' + MARKET_NAMES[e.market]));
+      cell(tr, e.date);
+      cell(tr, SIDE_NAMES[e.side], e.side === 'buy' ? 'up' : 'down');
+      cell(tr, num(e.shares));
+      cell(tr, String(e.price));
+      cell(tr, num(e.shares * e.price));
+      cell(tr, e.fee == null ? '未填' : num(e.fee));
+      cell(tr, MODE_NAMES[e.mode] || '—');
+      cell(tr, e.note || '—', 'wide');
+      var del = el('button', 'del', '刪除');
+      del.type = 'button';
+      del.dataset.id = e.id;
+      del.setAttribute('aria-label', '刪除 ' + e.date + ' ' + e.name + ' ' + SIDE_NAMES[e.side] + ' 紀錄');
+      cell(tr, '').appendChild(del);
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+  }
+  function journalApi(path, body) {
+    var options = body ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Console-Token': journalToken || '' },
+      body: JSON.stringify(body) } : {};
+    return fetch(path, options).then(function (response) {
+      return response.json().then(function (data) {
+        if (!response.ok) throw new Error(data.error || '研究控制台拒絕了這個要求');
+        return data;
+      });
+    });
+  }
+  function loadJournal(message) {
+    var form = document.getElementById('tradeForm');
+    return journalApi('/api/journal').then(function (data) {
+      journalToken = data.token;
+      journal = data.entries || [];
+      journalReady = true;
+      form.hidden = false;
+      if (!form.elements.date.value) form.elements.date.value = data.today;
+      setTradeStatus(message || '');
+      renderTracking();
+    }).catch(function (err) {
+      journal = []; journalReady = false; form.hidden = true;
+      setTradeStatus(err instanceof Error && !(err instanceof TypeError) && !(err instanceof SyntaxError) ? err.message
+        : '交易紀錄要透過研究控制台開啟這個頁面才能讀寫：雙擊 開啟自己看網頁.cmd。');
+      renderTracking();
+    });
+  }
+
   // ---------- gaps & footer ----------
   function renderFooter() {
     var gap = document.getElementById('gapNote');
@@ -1397,7 +1608,7 @@ footer b{color:var(--ink)}
       ['計算方式：', '普通股＝公司基本資料內、排除存託憑證的上市櫃股票，共 ' + D.stock_count + ' 檔。產業占比＝產業成交值合計÷普通股成交值合計；漲跌用「收盤價×發行股數」加權；今日漲跌用官方漲跌幅，5／20 日用收盤價比較、未還原除權息。發行股數為最新一版，用於過去 20 日的權重時是近似。'],
       ['法人：', '個股法人以「張」呈現（1 張＝1,000 股），外資含外資自營商，自營商含自行買賣與避險；「法人估算」＝淨股數×當日收盤價，不是官方成交金額。上市法人金額是官方統計，只含上市。'],
       ['提醒：', D.private
-        ? '這份「自己看」版本多了系統研究候選，只在本機，不含持股，也不是投資建議。'
+        ? '這份「自己看」版本多了系統研究候選與個股追蹤，只在本機；交易紀錄存在 data/user_input/trade_journal/，不會進 Git 或公開網站。這不是投資建議。'
         : (D.public_candidates ? '這頁包含系統研究候選，排名與分數代表研究優先順序，不是報酬預測或投資建議。'
           : '這頁只有市場層級的公開資料，由程式自動產生，不含任何人的持股，也不是投資建議。')]
     ];
@@ -1469,8 +1680,30 @@ footer b{color:var(--ink)}
     var b = e.target.closest('button'); if (!b) return;
     riskKind = b.dataset.risk; pressGroup('riskTabs', 'risk', riskKind); renderRisk();
   });
+  document.getElementById('tradeForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target.elements, button = e.target.querySelector('button[type="submit"]');
+    button.disabled = true;
+    journalApi('/api/journal', { date: f.date.value, symbol: f.symbol.value.trim().toUpperCase(), side: f.side.value,
+      shares: f.shares.value, price: f.price.value, fee: f.fee.value, mode: f.mode.value, note: f.note.value })
+      .then(function (data) {
+        var x = data.entry;
+        ['shares', 'price', 'fee', 'note'].forEach(function (name) { f[name].value = ''; });
+        return loadJournal('已記錄：' + x.date + ' ' + x.name + ' ' + SIDE_NAMES[x.side] + ' ' + num(x.shares) + ' 股 @ ' + x.price + '。');
+      })
+      .catch(function (err) { setTradeStatus('沒有記錄：' + err.message); })
+      .then(function () { button.disabled = false; });
+  });
+  document.getElementById('tradeTable').addEventListener('click', function (e) {
+    var b = e.target.closest('button.del'); if (!b) return;
+    if (!window.confirm('確定刪除這筆紀錄？刪除後無法復原。')) return;
+    journalApi('/api/journal/delete', { id: b.dataset.id })
+      .then(function () { return loadJournal('已刪除一筆紀錄。'); })
+      .catch(function (err) { setTradeStatus('沒有刪除：' + err.message); });
+  });
+  document.getElementById('tradeFilterClear').addEventListener('click', function () { tradeFilter = ''; renderTradeTable(); });
   // One view at a time; the link keeps it (#industry). A view whose panels all stayed hidden gets no button.
-  var VIEWS = ['overview', 'research', 'industry', 'institution', 'retail'];
+  var VIEWS = ['overview', 'research', 'industry', 'institution', 'retail', 'tracking'];
   function viewHasContent(name) {
     return [].some.call(document.querySelectorAll('#view-' + name + ' > .panel, #view-' + name + ' > .kpis'),
       function (node) { return !node.hidden; });
@@ -1498,6 +1731,7 @@ footer b{color:var(--ink)}
   });
   function renderCharts() {
     renderTreemap(); renderBars(); renderInstBars(); renderBreadth(); renderHeat(); renderInstHistory(); renderFutures(); renderRetail(); renderKlines();
+    renderTrackKlines();
   }
   var resizeTimer;
   window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderCharts, 150); });
@@ -1508,7 +1742,8 @@ footer b{color:var(--ink)}
 
   renderHeader(); renderKpis(); renderSummary(); renderBreadth(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
   renderHeat(); renderTop10(); renderIndustries(); renderListedInst(); renderInstHistory(); renderInstBars(); renderFlow();
-  renderFutures(); renderRetail(); renderRetailList(); renderFooter();
+  renderFutures(); renderRetail(); renderRetailList(); renderFooter(); renderTracking();
+  if (D.private) { setTradeStatus('讀取交易紀錄中…'); loadJournal(); }
   if (RISK) {  // open on the first kind that has stocks; the discovery tables' tags come from the generator
     riskKind = Object.keys(RISK_TABS).filter(function (k) { return riskRows(k).length; })[0] || 'disposition';
     pressGroup('riskTabs', 'risk', riskKind); renderRisk();
