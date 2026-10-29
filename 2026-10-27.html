@@ -189,6 +189,22 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
     <h2>今日重點</h2>
     <ul class="summary" id="summary"></ul>
   </section>
+  <section class="panel" id="contribPanel" hidden>
+    <div class="head">
+      <h2>指數漲跌點數貢獻</h2>
+      <div class="tabs" role="group" aria-label="貢獻範圍" id="contribTabs">
+        <button type="button" data-by="industry" aria-pressed="true">依產業</button>
+        <button type="button" data-by="stock" aria-pressed="false">依個股</button>
+      </div>
+    </div>
+    <p class="detail" id="contribNote"></p>
+    <div class="bars" id="contribBars"></div>
+  </section>
+  <section class="panel" id="distPanel" hidden>
+    <h2>今日漲跌分布</h2>
+    <p class="detail" id="distNote"></p>
+    <div class="chart" id="distChart"></div>
+  </section>
 
   <section class="panel" id="breadthPanel" hidden>
     <h2>市場寬度</h2>
@@ -258,6 +274,12 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
     </div>
     <p class="detail" id="barNote"></p>
     <div class="bars" id="bars"></div>
+  </section>
+  <section class="panel" id="scatterPanel" hidden>
+    <h2>產業漲跌與上漲家數</h2>
+    <p class="detail">橫軸＝產業今日市值加權漲跌；縱軸＝產業內上漲家數占成分股的比例；圓越大＝市值占比越高。右上＝產業漲、多數個股也漲；右下＝產業漲但多數個股沒漲，靠少數大型股；左上＝多數個股漲、大型股拖累；左下＝普遍下跌。</p>
+    <div class="legend" id="scatterLegend"></div>
+    <div class="chart" id="industryScatter"></div>
   </section>
 
   <section class="panel" id="heatPanel" hidden>
@@ -682,11 +704,15 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
     var x0 = labelW + 8, x1 = W - valueW;
     function sx(v) { return x0 + (v - lo) / ((hi - lo) || 1) * (x1 - x0); }
     var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, height: H, role: 'img', 'aria-label': o.name + '長條圖' });
+    function tickText(v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(+v.toFixed(2)).toLocaleString('zh-TW') + o.unit; }
+    var widest = Math.max(tickText(lo).length, tickText(hi).length) * 6.5 + 6;
+    var every = Math.max(1, Math.ceil(widest / (sx(lo + step) - sx(lo))));  // narrow screens label every other gridline, zero always
     for (var v = lo; v <= hi + step / 2; v += step) {
       var gx = sx(v);
       svg.appendChild(sv('line', { x1: gx, x2: gx, y1: top - 6, y2: H - 8, stroke: Math.abs(v) < 1e-9 ? cssVar('--axis') : cssVar('--grid'), 'stroke-width': 1 }));
+      if (Math.round(v / step) % every) continue;
       var tick = sv('text', { x: gx, y: 14, 'text-anchor': 'middle', 'font-size': 11, fill: cssVar('--muted') });
-      tick.textContent = (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(+v.toFixed(2)).toLocaleString('zh-TW') + o.unit;
+      tick.textContent = tickText(v);
       svg.appendChild(tick);
     }
     var zero = sx(0);
@@ -713,6 +739,98 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
       vt.textContent = label;
       g.appendChild(vt);
       bindTip(g, o.tip(r));
+      svg.appendChild(g);
+    });
+    box.appendChild(svg);
+  }
+
+  // ---------- index points and today's spread of moves ----------
+  var CONTRIB = D.index_contribution, contribBy = 'industry', CONTRIB_TOP = 10;
+  function renderContrib() {
+    if (!CONTRIB) return;
+    var c = CONTRIB, points = function (v) { return signed(v, 1, ' 點'); }, rows;
+    document.getElementById('contribPanel').hidden = false;
+    document.getElementById('contribNote').textContent = '加權指數今日官方 ' + signed(c.official_points, 2, ' 點') + '；用 ' + num(c.stock_count)
+      + ' 檔上市普通股估算合計 ' + points(c.estimated_points) + '。每檔權重＝已發行股數 × 前一日收盤價，貢獻點數＝權重占比 × 今日漲跌幅 × 前一日指數（'
+      + num(c.base_points, 2) + '）。加權指數不含上櫃；這是估算，指數成分調整會讓合計和官方差一點。紅＝撐住指數、綠＝拖累指數'
+      + (contribBy === 'stock' ? '；個股列出撐住與拖累指數最多的各前幾名（各最多 8 檔）。' : '；依產業列出影響最大的 ' + CONTRIB_TOP + ' 個，其餘合計。');
+    if (contribBy === 'stock') {
+      rows = c.stocks.map(function (s) {
+        return { label: s.name, points: s.points, tip: [s.name + '（' + s.symbol + '）', ['貢獻點數', points(s.points), dir(s.points)],
+          ['今日漲跌', pct(s.change_pct), dir(s.change_pct)], ['產業', s.industry]] };
+      });
+    } else {
+      var ranked = c.industries.slice().sort(function (a, b) { return Math.abs(b.points) - Math.abs(a.points); });
+      rows = ranked.slice(0, CONTRIB_TOP).sort(function (a, b) { return b.points - a.points; }).map(function (r) {
+        return { label: r.name, points: r.points, tip: [r.name, ['貢獻點數', points(r.points), dir(r.points)]] };
+      });
+      var rest = ranked.slice(CONTRIB_TOP), sum = rest.reduce(function (s, r) { return s + r.points; }, 0);
+      if (rest.length) rows.push({ label: '其他 ' + rest.length + ' 個產業', points: sum,
+        tip: ['其他 ' + rest.length + ' 個產業合計', ['貢獻點數', points(sum), dir(sum)]] });
+    }
+    drawBars(document.getElementById('contribBars'), rows, {
+      name: '指數點數貢獻', value: function (r) { return r.points; }, label: function (r) { return r.label; },
+      fmt: points, color: function (v) { return kindColor('money', v); }, tip: function (r) { return r.tip; },
+      unit: '', empty: '今天沒有可估算的上市個股。'
+    });
+  }
+  var DIST = D.change_distribution;
+  function distBins(d) {  // far down → flat → far up; each band holds moves up to its edge
+    var e = d.edges_pct, bins = [];
+    d.down.forEach(function (n, i) {
+      var lo = i ? e[i - 1] : 0, hi = e[i];
+      bins.unshift({ n: n, side: 'down', tick: hi == null ? '−' + lo + ' 以下' : '−' + hi + '~' + (lo ? '−' + lo : '0'),
+        title: hi == null ? '跌超過 ' + lo + '%' : '跌 ' + lo + '%～' + hi + '%' });
+    });
+    bins.push({ n: d.flat, side: 'flat', tick: '平盤', title: '平盤（0%）' });
+    d.up.forEach(function (n, i) {
+      var lo = i ? e[i - 1] : 0, hi = e[i];
+      bins.push({ n: n, side: 'up', tick: hi == null ? lo + ' 以上' : lo + '~' + hi, title: hi == null ? '漲超過 ' + lo + '%' : '漲 ' + lo + '%～' + hi + '%' });
+    });
+    return bins;
+  }
+  function renderDist() {
+    if (!DIST) return;
+    var d = DIST, add = function (s, v) { return s + v; }, box = document.getElementById('distChart');
+    document.getElementById('distPanel').hidden = false;
+    document.getElementById('distNote').textContent = '上市＋上櫃普通股依官方漲跌幅分組（已核對漲跌的 ' + num(d.stock_count) + ' 檔）：上漲 '
+      + num(d.up.reduce(add, 0)) + '、下跌 ' + num(d.down.reduce(add, 0)) + '、平盤 ' + num(d.flat) + ' 檔，中位數 ' + signed(d.median_pct, 2, '%')
+      + '。接近漲停（漲幅 9.5% 以上）' + d.near_limit_up + ' 檔、接近跌停 ' + d.near_limit_down + ' 檔。每組包含右端，例如「1~2」＝漲超過 1% 到 2%。'
+      + '看的是下跌有多普遍：大多擠在 0 附近是小跌，長尾拉長才是重挫。';
+    box.textContent = '';
+    var W = box.clientWidth;
+    if (!W) return;  // not laid out yet; the resize handler draws it later
+    W = Math.max(W, 280);
+    var bins = distBins(d), n = bins.length, left = 4, right = 44, top = 18, plotH = 170, axisH = 22;
+    var plotW = W - left - right, colW = plotW / n, H = top + plotH + axisH;
+    var dom = niceDomain(bins.map(function (b) { return b.n; }), { min: 0 });
+    function Y(v) { return top + plotH - v / dom.hi * plotH; }
+    var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, height: H, role: 'img', 'aria-label': '今日普通股漲跌幅分布，中位數 ' + signed(d.median_pct, 2, '%') });
+    for (var v = 0; v <= dom.hi + dom.step / 2; v += dom.step) {
+      svg.appendChild(sv('line', { x1: left, x2: left + plotW, y1: Y(v), y2: Y(v), stroke: cssVar(v ? '--grid' : '--axis'), 'stroke-width': 1 }));
+      var tick = sv('text', { x: left + plotW + 6, y: Y(v) + 4, 'font-size': 11, fill: cssVar('--muted') });
+      tick.textContent = num(v);
+      svg.appendChild(tick);
+    }
+    var every = colW < 24 ? 3 : colW < 44 ? 2 : 1;  // the flat band sits at index 6, so it keeps its label either way
+    var colors = { down: cssVar('--down'), up: cssVar('--up'), flat: cssVar('--cool') };
+    bins.forEach(function (b, i) {
+      var x = left + i * colW, bw = Math.max(1, colW - 4);
+      var g = sv('g', { tabindex: '0', role: 'button', 'aria-label': b.title + ' ' + b.n + ' 檔' });
+      g.appendChild(sv('rect', { x: x, y: top, width: colW, height: plotH, fill: 'transparent' }));
+      if (b.n) g.appendChild(sv('rect', { x: x + 2, y: Y(b.n), width: bw, height: Math.max(1, Y(0) - Y(b.n)), rx: Math.min(3, bw / 4), fill: colors[b.side] }));
+      if (colW >= 26) {
+        var count = sv('text', { x: x + colW / 2, y: Y(b.n) - 4, 'text-anchor': 'middle', 'font-size': 11, fill: cssVar('--ink2') });
+        count.textContent = num(b.n);
+        g.appendChild(count);
+      }
+      if (i % every === 0) {
+        var spill = x + colW / 2 - b.tick.length * 3.4 < 0;  // the first label starts at the edge instead of spilling past it
+        var t = sv('text', { x: spill ? 0 : x + colW / 2, y: H - 6, 'text-anchor': spill ? 'start' : 'middle', 'font-size': 11, fill: cssVar('--muted') });
+        t.textContent = b.tick;
+        g.appendChild(t);
+      }
+      bindTip(g, [b.title, ['檔數', num(b.n) + ' 檔'], ['占比', (b.n / d.stock_count * 100).toFixed(1) + '%']]);
       svg.appendChild(g);
     });
     box.appendChild(svg);
@@ -835,16 +953,20 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
     if (!HIST) return;
     var b = HIST.breadth, ma60 = b.above_ma60_pct.filter(function (v) { return v != null; }).length;
     var adStart = b.ad_line ? HIST.dates[b.ad_line.findIndex(function (v) { return v != null; })] : null;
+    var typical = typicalStock(b.median_change_pct);
     document.getElementById('breadthPanel').hidden = false;
     document.getElementById('breadthNote').textContent = '上市＋上櫃普通股。站上均線＝收盤價高於近 20／60 日收盤平均；新高／新低＝當日最高／最低超過前 60 個交易日。'
       + (adStart ? '上漲／下跌家數依官方漲跌（平盤與漲跌未核對的不計）；騰落線＝從 ' + adStart + ' 起每天「上漲家數−下跌家數」的累計，'
         + '看的是多數股票的方向：指數上漲但騰落線往下，代表是少數權值股撐住指數。' : '')
       + '收盤價未還原除權息。共 ' + HIST.dates.length + ' 個交易日（' + HIST.dates[0] + '～' + HIST.dates[HIST.dates.length - 1] + '）'
-      + (ma60 < HIST.dates.length ? '；60 日指標需要滿 60 個交易日的已核對資料，目前只有最近 ' + ma60 + ' 天，前段留白。' : '。');
+      + (ma60 < HIST.dates.length ? '；60 日指標需要滿 60 個交易日的已核對資料，目前只有最近 ' + ma60 + ' 天，前段留白。' : '。')
+      + (typical ? '最後一張把加權指數和「中位數個股」都從 ' + HIST.dates[typical.start] + ' 起算為 100：中位數個股＝每天全部普通股官方漲跌幅的中位數連乘，'
+        + '代表一檔典型股票；兩條線拉開，代表指數的漲跌主要來自少數權值股。' : '');
     legend(document.getElementById('breadthLegend'), [['站上 20 日線', '', cssVar('--accent')], ['站上 60 日線', 'dash', null],
       [adStart ? '新高／上漲' : '創 60 日新高', 'box', cssVar('--up')], [adStart ? '新低／下跌' : '創 60 日新低', 'box', cssVar('--down')]]
       .concat(adStart ? [['騰落線', '', cssVar('--accent')]] : [])
-      .concat([['加權指數', '', cssVar('--ink')]]));
+      .concat([['加權指數', '', cssVar('--ink')]])
+      .concat(typical ? [['中位數個股', 'dash', cssVar('--accent')]] : []));
     var count = function (v) { return Math.abs(v).toLocaleString('zh-TW') + ' 檔'; };
     var negate = function (values) { return values.map(function (v) { return v == null ? null : -v; }); };
     var panels = [
@@ -864,8 +986,25 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
     panels.push(
       { title: '加權指數', height: 90, tick: function (v) { return num(v); }, series: [
         { label: '加權指數', values: HIST.taiex, color: cssVar('--ink'), fmt: function (v) { return num(v, 2); } }] });
+    if (typical) panels.push(
+      { title: '加權指數 vs 中位數個股（' + md(HIST.dates[typical.start]) + '＝100）', height: 100, tick: function (v) { return num(v); }, series: [
+        { label: '加權指數（' + md(HIST.dates[typical.start]) + '＝100）', values: typical.index, color: cssVar('--ink'), fmt: function (v) { return v.toFixed(1); } },
+        { label: '中位數個股（' + md(HIST.dates[typical.start]) + '＝100）', values: typical.median, color: cssVar('--accent'), dash: '5 4', fmt: function (v) { return v.toFixed(1); } }] });
     drawTimePanels(document.getElementById('breadthChart'), HIST.dates, panels,
-      '市場寬度：站上均線比例、60 日新高新低家數' + (adStart ? '、漲跌家數、騰落線' : '') + '與加權指數，' + HIST.dates[0] + ' 至 ' + HIST.dates[HIST.dates.length - 1]);
+      '市場寬度：站上均線比例、60 日新高新低家數' + (adStart ? '、漲跌家數、騰落線' : '') + '與加權指數' + (typical ? '、加權指數對中位數個股' : '') + '，'
+      + HIST.dates[0] + ' 至 ' + HIST.dates[HIST.dates.length - 1]);
+  }
+  // Both lines start at 100 after the last session missing either input, so a gap is never bridged; the median line
+  // compounds each day's median official change across ordinary stocks.
+  function typicalStock(medians) {
+    if (!medians) return null;
+    var start = 0;
+    HIST.dates.forEach(function (day, i) { if (medians[i] == null || HIST.taiex[i] == null) start = i + 1; });
+    if (start >= HIST.dates.length - 1) return null;
+    var level = 100;
+    return { start: start,
+      index: HIST.taiex.map(function (v, i) { return i < start ? null : v / HIST.taiex[start] * 100; }),
+      median: medians.map(function (v, i) { if (i < start) return null; if (i > start) level *= 1 + v / 100; return level; }) };
   }
 
   var instField = 'total';
@@ -935,6 +1074,81 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
     bar.style.background = 'linear-gradient(90deg,' + cssVar(spec.scale[2]) + ',' + cssVar('--neutral') + ',' + cssVar(spec.scale[3]) + ')';
     scale.appendChild(bar);
     scale.appendChild(el('span', heatMetric === 'return_pct' ? 'up' : null, spec.scale[1]));
+  }
+
+  // Industry change against the share of its stocks that rose; bubble area follows market value.
+  function renderScatter() {
+    var rows = D.industries.filter(function (r) { return r.return_1d_pct != null && r.n_stocks > 0 && r.up != null; });
+    if (!rows.length) return;
+    document.getElementById('scatterPanel').hidden = false;
+    legend(document.getElementById('scatterLegend'), [['產業今日上漲', 'box', cssVar('--up')], ['產業今日下跌', 'box', cssVar('--down')],
+      ['一半個股上漲', 'dash', cssVar('--axis')]]);
+    var box = document.getElementById('industryScatter');
+    box.textContent = '';
+    var W = box.clientWidth;
+    if (!W) return;  // not laid out yet; the resize handler draws it later
+    W = Math.max(W, 280);
+    var left = 16, right = 44, top = 22, plotH = 300, axisH = 38, plotW = W - left - right, H = top + plotH + axisH;
+    var moves = rows.map(function (r) { return r.return_1d_pct; }).concat([0]);
+    var lo = Math.min.apply(null, moves), hi = Math.max.apply(null, moves), dx = { step: niceStep((hi - lo) || 1) };
+    dx.lo = Math.floor(lo / dx.step) * dx.step; dx.hi = Math.ceil(hi / dx.step) * dx.step;
+    if (dx.hi - dx.lo < 1e-9) dx.hi = dx.lo + dx.step;
+    function X(v) { return left + (v - dx.lo) / (dx.hi - dx.lo) * plotW; }
+    function Y(v) { return top + plotH - v / 100 * plotH; }
+    function R(r) { return 3 + Math.sqrt(r.marketcap_share_pct || 0) * 2.4; }
+    function ratio(r) { return r.up / r.n_stocks * 100; }
+    var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, height: H, role: 'img', 'aria-label': '產業今日漲跌與產業內上漲家數比例散點圖' });
+    [0, 25, 50, 75, 100].forEach(function (v) {
+      svg.appendChild(sv('line', { x1: left, x2: left + plotW, y1: Y(v), y2: Y(v), stroke: cssVar(v === 50 ? '--axis' : '--grid'),
+        'stroke-width': 1, 'stroke-dasharray': v === 50 ? '4 4' : 'none' }));
+      var t = sv('text', { x: left + plotW + 6, y: Y(v) + 4, 'font-size': 11, fill: cssVar('--muted') });
+      t.textContent = v + '%';
+      svg.appendChild(t);
+    });
+    var placed = [];  // label areas already taken, starting with the x tick labels
+    for (var v = dx.lo; v <= dx.hi + dx.step / 2; v += dx.step) {
+      var zero = Math.abs(v) < 1e-9;
+      svg.appendChild(sv('line', { x1: X(v), x2: X(v), y1: top, y2: top + plotH, stroke: cssVar(zero ? '--axis' : '--grid'), 'stroke-width': 1 }));
+      var edge = v - dx.lo < 1e-9 ? 'start' : dx.hi - v < 1e-9 ? 'end' : 'middle';  // keep edge labels clear of the y ticks
+      var tick = sv('text', { x: X(v), y: top + plotH + 15, 'text-anchor': edge, 'font-size': 11, fill: cssVar('--muted') });
+      tick.textContent = (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(+v.toFixed(2)) + '%';
+      svg.appendChild(tick);
+      var tw = tick.textContent.length * 6.5, tx = edge === 'start' ? X(v) : edge === 'end' ? X(v) - tw : X(v) - tw / 2;
+      placed.push({ x0: tx, x1: tx + tw, y0: top + plotH + 4, y1: top + plotH + 17 });
+    }
+    var xTitle = sv('text', { x: left + plotW / 2, y: H - 4, 'text-anchor': 'middle', 'font-size': 11, fill: cssVar('--ink2') });
+    xTitle.textContent = '產業今日漲跌（市值加權）';
+    svg.appendChild(xTitle);
+    var yTitle = sv('text', { x: left + plotW, y: 12, 'text-anchor': 'end', 'font-size': 11, fill: cssVar('--ink2') });
+    yTitle.textContent = '上漲家數比例';
+    svg.appendChild(yTitle);
+    rows.slice().sort(function (a, b) { return R(b) - R(a); }).forEach(function (r) {  // small bubbles stay on top
+      var color = r.return_1d_pct >= 0 ? cssVar('--up') : cssVar('--down');
+      var dot = sv('circle', { cx: X(r.return_1d_pct), cy: Y(ratio(r)), r: R(r), fill: color, 'fill-opacity': 0.4, stroke: color, 'stroke-width': 1.2,
+        tabindex: '0', 'aria-label': r.name + ' 今日 ' + pct(r.return_1d_pct) + '，上漲家數 ' + ratio(r).toFixed(0) + '%' });
+      bindTip(dot, industryTip(r).concat([['上漲家數比例', ratio(r).toFixed(0) + '%'],
+        ['市值占比', r.marketcap_share_pct == null ? '—' : r.marketcap_share_pct.toFixed(1) + '%']]));
+      svg.appendChild(dot);
+    });
+    // Name the largest industries and the day's best and worst, skipping a name that would overlap another.
+    var byCap = rows.slice().sort(function (a, b) { return (b.marketcap_share_pct || 0) - (a.marketcap_share_pct || 0); });
+    var byMove = rows.slice().sort(function (a, b) { return b.return_1d_pct - a.return_1d_pct; });
+    var named = byCap.slice(0, 6).concat([byMove[0], byMove[byMove.length - 1]]);
+    named.forEach(function (r) {
+      if (placed.some(function (p) { return p.row === r; })) return;
+      var cx = X(r.return_1d_pct), cy = Y(ratio(r)), rad = R(r), w = r.name.length * 12 + 2;
+      [[cx + rad + 4, 'start'], [cx - rad - 4, 'end']].some(function (spot) {
+        var x0 = spot[1] === 'start' ? spot[0] : spot[0] - w, area = { row: r, x0: x0, x1: x0 + w, y0: cy - 10, y1: cy + 5 };
+        if (area.x0 < left || area.x1 > left + plotW || area.y0 < top - 8 || area.y1 > top + plotH + 6) return false;
+        if (placed.some(function (p) { return area.x0 < p.x1 && p.x0 < area.x1 && area.y0 < p.y1 && p.y0 < area.y1; })) return false;
+        var label = sv('text', { x: spot[0], y: cy + 4, 'text-anchor': spot[1], 'font-size': 12, fill: cssVar('--ink') });
+        label.textContent = r.name;
+        svg.appendChild(label);
+        placed.push(area);
+        return true;
+      });
+    });
+    box.appendChild(svg);
   }
 
   // Candidate K line: candles + 20-day average + prior 60-day high, volume underneath.
@@ -1680,6 +1894,10 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
     var b = e.target.closest('button'); if (!b) return;
     riskKind = b.dataset.risk; pressGroup('riskTabs', 'risk', riskKind); renderRisk();
   });
+  document.getElementById('contribTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    contribBy = b.dataset.by; pressGroup('contribTabs', 'by', contribBy); renderContrib();
+  });
   document.getElementById('tradeForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var f = e.target.elements, button = e.target.querySelector('button[type="submit"]');
@@ -1731,7 +1949,7 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
   });
   function renderCharts() {
     renderTreemap(); renderBars(); renderInstBars(); renderBreadth(); renderHeat(); renderInstHistory(); renderFutures(); renderRetail(); renderKlines();
-    renderTrackKlines();
+    renderTrackKlines(); renderContrib(); renderDist(); renderScatter();
   }
   var resizeTimer;
   window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderCharts, 150); });
@@ -1740,7 +1958,7 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
     if (!document.hidden) renderCharts();
   });
 
-  renderHeader(); renderKpis(); renderSummary(); renderBreadth(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
+  renderHeader(); renderKpis(); renderSummary(); renderContrib(); renderDist(); renderBreadth(); renderScatter(); renderCandidates(); renderTreemap(); renderScale(); renderBars();
   renderHeat(); renderTop10(); renderIndustries(); renderListedInst(); renderInstHistory(); renderInstBars(); renderFlow();
   renderFutures(); renderRetail(); renderRetailList(); renderFooter(); renderTracking();
   if (D.private) { setTradeStatus('讀取交易紀錄中…'); loadJournal(); }
