@@ -229,6 +229,7 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
   </nav>
 
   <div class="view" id="view-overview">
+  
   <p class="notice">成交值 ≠ 法人淨買超 ≠ 資金淨流入。顏色照台股習慣：紅＝上漲、綠＝下跌；數字都附 ▲▼ 與正負號。</p>
 
   <section class="kpis" id="kpis" aria-label="大盤摘要"></section>
@@ -291,6 +292,8 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
 <div id="discovery-opportunity" hidden><h3>Radar 價量探索</h3><p class="detail">結果不可用 · 列出 0／已評估 0 檔 · 尚未執行</p><p class="detail">Q1／Q2／Q3 是探索分級，完整五支柱評級未執行。</p><ul class="report-limitations"><li>這個資料日尚無多入口結果，請先執行本機多入口研究。</li></ul><p class="gap">這個資料日沒有可列出的結果。</p></div><div id="discovery-attention" hidden><h3>Daily 異動注意</h3><p class="detail">結果不可用 · 列出 0／已評估 0 檔 · 尚未執行</p><p class="detail">包含強勢與風險異動，依原資料順序列出，沒有名次；完整 CDG 個股評級未執行。</p><ul class="report-limitations"><li>這個資料日尚無多入口結果，請先執行本機多入口研究。</li></ul><p class="gap">這個資料日沒有可列出的結果。</p></div>
   </section>
 
+  
+  
   
   </div>
 
@@ -2515,6 +2518,7 @@ td .del{min-height:32px;padding:4px 10px;font-size:12px}
       chipList(card, '支持', c.supports, null, '沒有達到門檻的支持項目');
       chipList(card, '風險／反證', c.risks, 'risk', '系統沒有列出風險');
       chipList(card, '缺少的資料', c.missing, 'miss', '沒有缺漏');
+      
       if (c.conditions) {
         card.appendChild(el('h4', null, '每日筆記的條件'));
         var ul = el('ul', 'cond');
